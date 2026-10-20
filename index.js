@@ -26,7 +26,7 @@ process.on('SIGINT', function() {
 app.set("view engine", "ejs");
 
 app.get('/', (req, res) => {
-    const data = {name: 'Sidney'};
+    const data = {name: 'Mario'};
     res.render('index', data);
 });
 

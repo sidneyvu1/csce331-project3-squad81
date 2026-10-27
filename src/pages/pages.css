@@ -1,0 +1,103 @@
+/* Hub Page */
+.hub-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.hub-container h1 {
+  font-size: 48px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: 800px;
+  width: 100%;
+}
+
+.hub-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background-color: white;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hub-button:hover {
+  border-color: #b8b6b8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.hub-button h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.hub-button p {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Page Layout */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background-color: white;
+  border-bottom: 2px solid #ddd;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  color: #333;
+  margin: 0;
+}
+
+.home-button {
+  padding: 10px 20px;
+  background-color: #b8b6b8;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.home-button:hover {
+  background-color: #868386;
+}
+
+.page-content {
+  flex: 1;
+  padding: 30px;
+}

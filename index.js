@@ -1,10 +1,11 @@
 const express = require('express');
+const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv').config();
 
 // Create express app
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Create pool
 const pool = new Pool({
@@ -23,28 +24,28 @@ process.on('SIGINT', function() {
     process.exit(0);
 });
 
-app.set("view engine", "ejs");
+// Serve static files
+app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('/', (req, res) => {
-    const data = {name: 'Mario'};
-    res.render('index', data);
-});
-
-app.get('/user', (req, res) => {
-    teammembers = []
+// API Routes
+app.get('/api/user', (req, res) => {
+    const teammembers = [];
     pool
         .query('SELECT * FROM teammembers;')
         .then(query_res => {
             for (let i = 0; i < query_res.rowCount; i++){
                 teammembers.push(query_res.rows[i]);
             }
-            const data = {teammembers: teammembers};
-            console.log(teammembers);
-            res.render('user', data);
+            res.json({ teammembers: teammembers });
         });
 });
 
+// Fallback: serve React app for all routes
+app.get('/*splat', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+    console.log(`App listening at http://localhost:${port}`);
 });
 

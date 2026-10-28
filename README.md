@@ -43,14 +43,18 @@ Only the Portal Hub links to the other views.
 
 ### Development
 
-Run the backend and the frontend dev server in two terminals:
+Run both the backend and the frontend dev server with one command:
 
 ```bash
-npm start     # Express API on http://localhost:3000
-npm run dev   # React dev server on http://localhost:3001
+npm run dev
 ```
 
-Open http://localhost:3001. API requests to `/api` are proxied to the backend.
+Open http://localhost:3001. This starts:
+
+- **Vite** on port 3001 to serve the React app with fast refresh during development.
+- **Express** on port 3000 to provide the `/api` endpoints and connect to PostgreSQL.
+
+Both are needed because the React app is served by Vite during development, while its API requests are handled by Express. Vite proxies `/api` requests to Express. In production, `npm run build` creates the React assets and Express serves those assets as well as the API, so only `npm start` is needed.
 
 ### Production build
 

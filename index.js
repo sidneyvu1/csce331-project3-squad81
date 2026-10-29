@@ -28,6 +28,18 @@ process.on('SIGINT', function() {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // API Routes
+app.get('/api/menu', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT menu_item_id, name, category, price FROM menu_items ORDER BY category, name;'
+        );
+        res.json({ menuItems: rows });
+    } catch (error) {
+        console.error('Unable to load menu items:', error);
+        res.status(500).json({ error: 'Unable to load menu items.' });
+    }
+});
+
 app.get('/api/user', (req, res) => {
     const teammembers = [];
     pool
@@ -48,4 +60,3 @@ app.get('/*splat', (req, res) => {
 app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);
 });
-

@@ -50,13 +50,13 @@ export default function CashierScreen() {
   const visibleItems = menuItems.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="page-container">
+    <div className="page-container cashier-page">
       <header className="page-header">
         <h1>Cashier Screen</h1>
         <Link to="/" className="home-button">Home</Link>
       </header>
 
-      <main className="page-content">
+      <main className="page-content cashier-page-content">
         <section className="cashier-menu" aria-label="Menu">
           <div className="cashier-menu-heading">
             <div>

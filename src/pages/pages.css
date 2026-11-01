@@ -83,6 +83,17 @@
   margin: 0;
 }
 
+.cashier-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cart-count {
+  color: #333;
+  font-weight: 700;
+}
+
 .home-button {
   padding: 10px 20px;
   background-color: #b8b6b8;
@@ -407,6 +418,65 @@
   outline-offset: 1px;
 }
 
+.cart-add-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-control button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f8f7f8;
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+  font-size: 22px;
+}
+
+.quantity-control button:hover:not(:disabled) {
+  border-color: #868386;
+  background: #eee9ed;
+}
+
+.quantity-control button:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.quantity-control output {
+  min-width: 24px;
+  color: #333;
+  font-weight: 700;
+  text-align: center;
+}
+
+.add-to-cart-button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #868386;
+  border-radius: 8px;
+  background: #686568;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.add-to-cart-button:hover {
+  background: #4f4d4f;
+}
+
 .menu-item-modal-close {
   border: 0;
   background: transparent;
@@ -456,5 +526,10 @@
   .topping-stock {
     grid-column: 2;
     text-align: left;
+  }
+
+  .cart-add-controls {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

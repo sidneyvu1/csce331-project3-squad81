@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './pages.css';
 
 export default function CashierScreen() {
+  const nextCartItemId = useRef(1);
+  const [cart, setCart] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [toppings, setToppings] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -15,12 +17,16 @@ export default function CashierScreen() {
   const [iceLevel, setIceLevel] = useState('Regular');
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [notes, setNotes] = useState('');
+  const [quantity, setQuantity] = useState(1);
+
+  const cartDrinkCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   function resetDrinkAdjustments() {
     setSugarLevel('100%');
     setIceLevel('Regular');
     setSelectedToppings([]);
     setNotes('');
+    setQuantity(1);
   }
 
   function toggleTopping(toppingId) {
@@ -39,6 +45,30 @@ export default function CashierScreen() {
   function closeItem() {
     setSelectedItem(null);
     resetDrinkAdjustments();
+  }
+
+  function addToCart() {
+    setCart((current) => [
+      ...current,
+      {
+        id: nextCartItemId.current++,
+        menu_item_id: selectedItem.menu_item_id,
+        name: selectedItem.name,
+        quantity,
+        unit_price: Number(selectedItem.price),
+        toppings: selectedToppings.map((toppingId) => {
+          const topping = toppings.find((item) => item.inventory_id === toppingId);
+          return {
+            inventory_id: topping.inventory_id,
+            name: topping.name
+          };
+        }),
+        sugar_level: sugarLevel,
+        ice_level: iceLevel,
+        notes: notes.trim()
+      }
+    ]);
+    closeItem();
   }
 
   useEffect(() => {
@@ -131,7 +161,10 @@ export default function CashierScreen() {
     <div className="page-container cashier-page">
       <header className="page-header">
         <h1>Cashier Screen</h1>
-        <Link to="/" className="home-button">Home</Link>
+        <div className="cashier-header-actions">
+          <span className="cart-count" aria-live="polite">Cart: {cartDrinkCount}</span>
+          <Link to="/" className="home-button">Home</Link>
+        </div>
       </header>
 
       <main className="page-content cashier-page-content">
@@ -288,6 +321,29 @@ export default function CashierScreen() {
                 placeholder="Add any special requests"
                 rows={3}
               />
+            </div>
+            <div className="cart-add-controls">
+              <div className="quantity-control" aria-label="Drink quantity">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+                <output aria-live="polite">{quantity}</output>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((current) => current + 1)}
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+              <button className="add-to-cart-button" type="button" onClick={addToCart}>
+                Add to Cart
+              </button>
             </div>
           </section>
         </div>

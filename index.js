@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv').config();
+const { submitOrder, OrderRequestError } = require('./orderService');
 
 // Create express app
 const app = express();
@@ -26,6 +27,7 @@ process.on('SIGINT', function() {
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.json({ limit: '100kb' }));
 
 // API Routes
 app.get('/api/menu', async (req, res) => {
@@ -49,6 +51,20 @@ app.get('/api/toppings', async (req, res) => {
     } catch (error) {
         console.error('Unable to load toppings:', error);
         res.status(500).json({ error: 'Unable to load toppings.' });
+    }
+});
+
+app.post('/api/orders', async (req, res) => {
+    try {
+        const order = await submitOrder(pool, req.body?.items);
+        return res.status(201).json({ order });
+    } catch (error) {
+        if (error instanceof OrderRequestError) {
+            return res.status(error.statusCode).json({ error: error.message });
+        }
+
+        console.error('Unable to submit order:', error);
+        return res.status(500).json({ error: 'Unable to submit order.' });
     }
 });
 

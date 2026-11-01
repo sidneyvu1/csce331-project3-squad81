@@ -40,6 +40,18 @@ app.get('/api/menu', async (req, res) => {
     }
 });
 
+app.get('/api/toppings', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            "SELECT inventory_id, item_name AS name, quantity_on_hand FROM inventory WHERE category = 'Topping' ORDER BY item_name;"
+        );
+        res.json({ toppings: rows });
+    } catch (error) {
+        console.error('Unable to load toppings:', error);
+        res.status(500).json({ error: 'Unable to load toppings.' });
+    }
+});
+
 app.get('/api/user', (req, res) => {
     const teammembers = [];
     pool

@@ -842,6 +842,35 @@
   }
 }
 
+
+/* Kitchen display */
+.kitchen-board {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kitchen-page .submit-order-button {
+  width: 100%;
+}
+
+.kitchen-page .home-button,
+.kitchen-page .submit-order-button,
+.kitchen-page .submit-order-button:disabled {
+  cursor: default;
+  transition: none;
+}
+
+.kitchen-page .home-button:hover {
+  background-color: #b8b6b8;
+}
+
+.kitchen-page .submit-order-button:hover:not(:disabled) {
+  background: #686568;
+}
+
+@media (max-width: 1000px) {
+  .kitchen-board {
+    grid-template-columns: 1fr;
+  }
 /* Manager dashboard shares the cashier's panel and button styles. */
 .manager-content { width: 100%; max-width: 1660px; box-sizing: border-box; margin: 0 auto; }
 .manager-subtitle { margin: 8px 0 0; color: #666; font-size: 14px; }

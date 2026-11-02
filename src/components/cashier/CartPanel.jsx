@@ -11,7 +11,8 @@ export default function CartPanel({
   submitting,
   submitError,
   completedOrder,
-  onSubmitOrder
+  onSubmitOrder,
+  submitLabel = 'Submit Order'
 }) {
   function formatCurrency(cents) {
     return `$${(cents / 100).toFixed(2)}`;
@@ -109,7 +110,7 @@ export default function CartPanel({
         onClick={onSubmitOrder}
         disabled={cart.length === 0 || submitting}
       >
-        {submitting ? 'Submitting…' : 'Submit Order'}
+        {submitting ? 'Submitting…' : submitLabel}
       </button>
     </aside>
   );

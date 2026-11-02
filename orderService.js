@@ -171,7 +171,7 @@ function calculateOrderTotals(items, menuPrices) {
 
 async function insertOrder(client, totals) {
     const { rows } = await client.query(
-        'INSERT INTO orders (order_time, employee_id, total, number_of_drinks, tax) VALUES (CURRENT_TIMESTAMP, NULL, $1, $2, $3) RETURNING order_id;',
+        "INSERT INTO orders (order_time, employee_id, total, number_of_drinks, tax, kitchen_status) VALUES (CURRENT_TIMESTAMP, NULL, $1, $2, $3, 'pending') RETURNING order_id;",
         [
             (totals.totalCents / 100).toFixed(2),
             totals.numberOfDrinks,

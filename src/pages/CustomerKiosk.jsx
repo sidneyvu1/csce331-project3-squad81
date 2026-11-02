@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import CartPanel from '../components/cashier/CartPanel';
 import DrinkCustomizationModal from '../components/cashier/DrinkCustomizationModal';
 import MenuBrowser from '../components/cashier/MenuBrowser';
+import KioskCheckout from '../components/kiosk/KioskCheckout';
 import './pages.css';
 
 async function fetchToppings() {
@@ -32,6 +33,8 @@ export default function CustomerKiosk() {
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [completedOrder, setCompletedOrder] = useState(null);
+  const [checkoutStep, setCheckoutStep] = useState('menu');
+  const [rewardsPhone, setRewardsPhone] = useState('');
 
   const cartDrinkCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotalCents = cart.reduce(
@@ -64,7 +67,7 @@ export default function CustomerKiosk() {
     setCart((current) => current.filter((item) => item.id !== itemId));
   }
 
-  async function submitOrder() {
+  async function submitOrder(phone = '') {
     if (cart.length === 0 || submittingOrder) return;
 
     setSubmittingOrder(true);
@@ -104,7 +107,8 @@ export default function CustomerKiosk() {
       }
 
       setCart([]);
-      setCompletedOrder(data.order);
+      setCompletedOrder({ ...data.order, items: cart, rewardsPhone: phone });
+      setCheckoutStep('confirmation');
       try {
         setToppings(await fetchToppings());
         setToppingsError('');
@@ -189,6 +193,25 @@ export default function CustomerKiosk() {
       </header>
 
       <main className="page-content customer-page-content">
+        {checkoutStep !== 'menu' ? (
+          <KioskCheckout
+            step={checkoutStep}
+            order={completedOrder}
+            phone={rewardsPhone}
+            onPhoneChange={setRewardsPhone}
+            totalCents={totalCents}
+            submitting={submittingOrder}
+            error={submitError}
+            onSubmit={submitOrder}
+            onBack={() => { setSubmitError(''); setCheckoutStep('menu'); }}
+            onNewOrder={() => {
+              setCompletedOrder(null);
+              setRewardsPhone('');
+              setSubmitError('');
+              setCheckoutStep('menu');
+            }}
+          />
+        ) : (
         <div className="customer-workspace">
           <MenuBrowser
             menuItems={menuItems}
@@ -211,9 +234,11 @@ export default function CustomerKiosk() {
             submitting={submittingOrder}
             submitError={submitError}
             completedOrder={completedOrder}
-            onSubmitOrder={submitOrder}
+            submitLabel="Continue to checkout"
+            onSubmitOrder={() => setCheckoutStep('rewards')}
           />
         </div>
+        )}
       </main>
 
       {selectedItem && (

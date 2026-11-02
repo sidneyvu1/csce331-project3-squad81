@@ -841,3 +841,56 @@
     flex-direction: column;
   }
 }
+
+/* Manager dashboard shares the cashier's panel and button styles. */
+.manager-content { width: 100%; max-width: 1660px; box-sizing: border-box; margin: 0 auto; }
+.manager-subtitle { margin: 8px 0 0; color: #666; font-size: 14px; }
+.manager-nav { display: flex; gap: 10px; margin-bottom: 24px; overflow-x: auto; padding: 2px 2px 6px; }
+.manager-nav .menu-category { flex: 0 0 auto; text-align: center; min-width: 110px; }
+.manager-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+.manager-metric { display: flex; flex-direction: column; gap: 8px; padding: 20px 24px; background: white; border: 1px solid #e4e1e4; border-radius: 12px; }
+.manager-metric strong { font-size: 28px; color: #333; }
+.manager-metric span { color: #666; font-size: 14px; }
+.manager-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); align-items: start; gap: 20px; }
+.manager-inventory { box-sizing: border-box; min-width: 0; }
+.inventory-toolbar { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.inventory-toolbar > label:first-child { display: grid; flex: 1; min-width: 160px; gap: 8px; font-size: 14px; font-weight: 700; color: #555; }
+.inventory-toolbar input[type="search"], .inventory-edit input { box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font: inherit; background: white; color: #333; }
+.inventory-filter { display: flex; align-items: center; gap: 6px; min-height: 40px; font-size: 14px; color: #555; }
+.inventory-filter input { accent-color: #686568; }
+.inventory-help { color: #666; font-size: 12px; line-height: 1.6; margin: 16px 0; }
+.manager-small-button { min-height: 38px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; background: #f8f7f8; color: #333; font: inherit; font-size: 14px; cursor: pointer; }
+.manager-small-button:hover:not(:disabled) { border-color: #868386; background: #eee9ed; }
+.manager-small-button:disabled { opacity: .6; cursor: not-allowed; }
+.manager-page button:focus-visible, .manager-page input:focus-visible { outline: 2px solid #686568; outline-offset: 3px; }
+.inventory-table-scroll { overflow-x: auto; }
+.inventory-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.inventory-table-caption { text-align: left; color: #666; font-size: 12px; padding-bottom: 12px; }
+.inventory-table th, .inventory-table td { padding: 16px 10px; border-bottom: 1px solid #e9e7e9; vertical-align: top; color: #333; }
+.inventory-table thead th { color: #666; background: #f8f7f8; font-size: 12px; }
+.inventory-table tbody th { min-width: 130px; font-weight: 600; }
+.inventory-table small { display: block; margin-top: 5px; color: #666; font-size: 12px; font-weight: 400; }
+.inventory-status { display: inline-block; padding: 5px 9px; border: 1px solid #ddd; border-radius: 6px; background: #f5f5f5; color: #555; font-size: 12px; white-space: nowrap; }
+.status-good { background: #f0f5f1; color: #3e6048; border-color: #dbe6de; }
+.status-low { background: #faf5eb; color: #79602b; border-color: #e9ddc4; }
+.status-critical { background: #fbf1f1; color: #8c3535; border-color: #ead3d3; }
+.inventory-edit { min-width: 150px; max-width: 210px; }
+.inventory-quantity-label { display: grid; gap: 6px; color: #555; font-size: 12px; }
+.inventory-edit-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.manager-insights section { padding: 18px 0; border-bottom: 1px solid #e4e1e4; }
+.manager-insights h3 { margin: 0 0 12px; color: #333; font-size: 16px; }
+.manager-insights p { margin: 0; color: #666; font-size: 14px; line-height: 1.6; }
+.inventory-restock { display: grid; gap: 16px; list-style: none; padding: 0; margin: 0; }
+.inventory-restock li { display: grid; gap: 5px; font-size: 14px; color: #333; }
+.inventory-restock span { font-size: 12px; color: #666; }
+.manager-placeholder { box-sizing: border-box; }
+.manager-placeholder > button { align-self: flex-start; }
+@media (max-width: 1100px) { .manager-workspace { grid-template-columns: 1fr; } .manager-insights { min-height: auto; } }
+@media (max-width: 700px) {
+  .manager-page .page-header { flex-wrap: wrap; gap: 18px; padding: 20px; }
+  .manager-page .page-header h1 { font-size: 26px; }
+  .manager-content { padding: 20px; }
+  .manager-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .manager-metric { padding: 16px; }
+  .manager-inventory { padding: 18px; }
+}

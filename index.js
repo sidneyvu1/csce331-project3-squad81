@@ -30,6 +30,42 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.json({ limit: '100kb' }));
 
 // API Routes
+app.get('/api/inventory', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT inventory_id, item_name, category, unit, quantity_on_hand, reorder_threshold FROM inventory ORDER BY item_name;'
+        );
+        res.json({ inventory: rows });
+    } catch (error) {
+        console.error('Unable to load inventory:', error);
+        res.status(500).json({ error: 'Unable to load inventory.' });
+    }
+});
+
+app.patch('/api/inventory/:id', async (req, res) => {
+    const id = Number(req.params.id);
+    const quantity = req.body?.quantity_on_hand;
+    const expectedQuantity = req.body?.expected_quantity;
+    if (!Number.isSafeInteger(id) || id <= 0 ||
+        !Number.isInteger(quantity) || quantity < 0 || quantity > 2147483647 ||
+        !Number.isInteger(expectedQuantity) || expectedQuantity < 0) {
+        return res.status(400).json({ error: 'Provide a valid item ID and nonnegative whole-number quantities.' });
+    }
+    try {
+        const { rows } = await pool.query(
+            'UPDATE inventory SET quantity_on_hand = $1 WHERE inventory_id = $2 AND quantity_on_hand = $3 RETURNING inventory_id, item_name, category, unit, quantity_on_hand, reorder_threshold;',
+            [quantity, id, expectedQuantity]
+        );
+        if (!rows.length) {
+            return res.status(409).json({ error: 'Stock changed or this item was removed. Refresh inventory before updating again.' });
+        }
+        res.json({ item: rows[0] });
+    } catch (error) {
+        console.error('Unable to update inventory:', error);
+        res.status(500).json({ error: 'Unable to update inventory.' });
+    }
+});
+
 app.get('/api/menu', async (req, res) => {
     try {
         const { rows } = await pool.query(

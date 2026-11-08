@@ -196,3 +196,5 @@ app.listen(port, () => {
     pool.query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS kitchen_status VARCHAR(20) NOT NULL DEFAULT 'completed';")
         .catch(error => console.error('Unable to add kitchen_status column:', error));
 });
+
+app.get('/ping', (req, res) => res.status(200).send('pong'));

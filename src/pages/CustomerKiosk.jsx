@@ -4,6 +4,7 @@ import CartPanel from '../components/cashier/CartPanel';
 import DrinkCustomizationModal from '../components/cashier/DrinkCustomizationModal';
 import MenuBrowser from '../components/cashier/MenuBrowser';
 import KioskCheckout from '../components/kiosk/KioskCheckout';
+import KioskPayment from '../components/kiosk/KioskPayment';
 import './pages.css';
 
 async function fetchToppings() {
@@ -67,7 +68,7 @@ export default function CustomerKiosk() {
     setCart((current) => current.filter((item) => item.id !== itemId));
   }
 
-  async function submitOrder(phone = '') {
+  async function submitOrder(payment) {
     if (cart.length === 0 || submittingOrder) return;
 
     setSubmittingOrder(true);
@@ -107,7 +108,7 @@ export default function CustomerKiosk() {
       }
 
       setCart([]);
-      setCompletedOrder({ ...data.order, items: cart, rewardsPhone: phone });
+      setCompletedOrder({ ...data.order, items: cart, rewardsPhone, payment });
       setCheckoutStep('confirmation');
       try {
         setToppings(await fetchToppings());
@@ -193,7 +194,15 @@ export default function CustomerKiosk() {
       </header>
 
       <main className="page-content customer-page-content">
-        {checkoutStep !== 'menu' ? (
+        {checkoutStep === 'payment' ? (
+          <KioskPayment
+            totalCents={totalCents}
+            submitting={submittingOrder}
+            error={submitError}
+            onPay={submitOrder}
+            onBack={() => { setSubmitError(''); setCheckoutStep('rewards'); }}
+          />
+        ) : checkoutStep !== 'menu' ? (
           <KioskCheckout
             step={checkoutStep}
             order={completedOrder}
@@ -202,7 +211,11 @@ export default function CustomerKiosk() {
             totalCents={totalCents}
             submitting={submittingOrder}
             error={submitError}
-            onSubmit={submitOrder}
+            onContinue={(normalizedPhone) => {
+              setRewardsPhone(normalizedPhone);
+              setSubmitError('');
+              setCheckoutStep('payment');
+            }}
             onBack={() => { setSubmitError(''); setCheckoutStep('menu'); }}
             onNewOrder={() => {
               setCompletedOrder(null);

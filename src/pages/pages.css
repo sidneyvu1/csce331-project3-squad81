@@ -925,3 +925,12 @@
   .manager-metric { padding: 16px; }
   .manager-inventory { padding: 18px; }
 }
+
+
+
+.kiosk-payment-methods { display: grid; gap: 10px; margin: 8px 0 0; padding: 0; border: 0; }
+.kiosk-payment-methods legend { padding: 0; font-weight: 700; margin-bottom: 10px; }
+.kiosk-checkout .kiosk-payment-option { display: flex; align-items: center; gap: 12px; margin: 0; padding: 14px; border: 1px solid #999; border-radius: 8px; cursor: pointer; }
+.kiosk-checkout .kiosk-payment-option.selected { border-color: #333; background: #f5f3f5; }
+.kiosk-checkout .kiosk-payment-option input { width: 22px; min-height: 0; height: 22px; margin: 0; }
+.kiosk-payment-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

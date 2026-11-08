@@ -56,7 +56,7 @@ export default function ManagerDashboard() {
     <div className="page-container manager-page">
       <header className="page-header">
         <div><h1>Manager Dashboard</h1><p className="manager-subtitle">Manage inventory, menu items, employees, and reports.</p></div>
-        <div className="cashier-header-actions"><span>Peter Castillo</span><Link to="/" className="home-button">Home</Link></div>
+        <div className="cashier-header-actions"><Link to="/" className="home-button">Home</Link></div>
       </header>
       <main className="page-content manager-content">
         <nav className="manager-nav" aria-label="Manager sections">

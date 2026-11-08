@@ -4,7 +4,7 @@ const money = (amount) => `$${Number(amount).toFixed(2)}`;
 
 export default function KioskCheckout({
   step, order, phone, onPhoneChange, totalCents, submitting, error,
-  onSubmit, onBack, onNewOrder
+  onContinue, onBack, onNewOrder
 }) {
   const heading = useRef(null);
   const [phoneError, setPhoneError] = useState('');
@@ -20,7 +20,7 @@ export default function KioskCheckout({
       return;
     }
     setPhoneError('');
-    onSubmit(normalized);
+    onContinue(normalized);
   }
 
   if (step === 'confirmation' && order) {
@@ -49,8 +49,15 @@ export default function KioskCheckout({
           <div><dt>Tax (8.25%)</dt><dd>{money(order.tax)}</dd></div>
           <div className="cart-total"><dt>Order total</dt><dd>{money(order.total)}</dd></div>
         </dl>
+        {order.payment && (
+          <p className="kiosk-rewards-note">
+            {order.payment.method === 'card'
+              ? `Paid with card ending in ${order.payment.last4}.`
+              : 'Payment due at the counter when you pick up your order.'}
+          </p>
+        )}
         {order.rewardsPhone && (
-          <p className="kiosk-rewards-note">Rewards phone entered: ••• ••• {order.rewardsPhone.slice(-4)}. Points are not credited yet; rewards integration is coming soon.</p>
+          <p className="kiosk-rewards-note">Rewards phone entered: xxx xxx {order.rewardsPhone.slice(-4)}.</p>
         )}
         <button type="button" className="submit-order-button" onClick={onNewOrder}>Start a new order</button>
       </section>
@@ -59,16 +66,14 @@ export default function KioskCheckout({
 
   return (
     <section className="kiosk-checkout" aria-labelledby="checkout-heading" aria-busy={submitting}>
-      <p className="kiosk-eyebrow">Rewards · Optional</p>
       <h2 id="checkout-heading" ref={heading} tabIndex={-1}>Add your rewards number</h2>
-      <p>Enter your phone number for rewards, or skip to place your order.</p>
-      <p id="rewards-help" className="kiosk-rewards-note">Rewards are coming soon. This screen collects your number for this checkout only; points are not credited yet.</p>
+      <p>Enter your phone number for rewards, or skip to continue to payment.</p>
       <form onSubmit={continueWithRewards} noValidate>
         <label htmlFor="rewards-phone">Phone number</label>
         <input
           id="rewards-phone" type="tel" inputMode="tel" autoComplete="off"
           placeholder="(555) 123-4567" maxLength={24} value={phone}
-          disabled={submitting} aria-describedby={`rewards-help${phoneError ? ' phone-error' : ''}`}
+          disabled={submitting} aria-describedby={phoneError ? 'phone-error' : undefined}
           aria-invalid={Boolean(phoneError)}
           onChange={(event) => { onPhoneChange(event.target.value); setPhoneError(''); }}
         />
@@ -76,8 +81,8 @@ export default function KioskCheckout({
         <div className="kiosk-checkout-total"><span>Order total</span><strong>{money(totalCents / 100)}</strong></div>
         {error && <p className="menu-error" role="alert">{error}</p>}
         <div className="kiosk-checkout-actions">
-          <button type="submit" className="submit-order-button" disabled={submitting}>{submitting ? 'Placing order…' : 'Add number & place order'}</button>
-          <button type="button" className="kiosk-secondary-button" disabled={submitting} onClick={() => { setPhoneError(''); onSubmit(''); }}>Skip rewards & place order</button>
+          <button type="submit" className="submit-order-button" disabled={submitting}>Add number & continue</button>
+          <button type="button" className="kiosk-secondary-button" disabled={submitting} onClick={() => { setPhoneError(''); onContinue(''); }}>Skip rewards & continue</button>
           <button type="button" className="kiosk-back-button" disabled={submitting} onClick={onBack}>Back to my order</button>
         </div>
       </form>

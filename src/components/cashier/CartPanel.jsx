@@ -59,7 +59,7 @@ export default function CartPanel({
                   <div><dt>Sugar</dt><dd>{item.sugar_level}</dd></div>
                   <div><dt>Ice</dt><dd>{item.ice_level}</dd></div>
                   {item.toppings.length > 0 && (
-                    <div><dt>Toppings</dt><dd>{item.toppings.map((topping) => topping.name).join(', ')}</dd></div>
+                    <div><dt>Toppings</dt><dd>{item.toppings.map((topping) => `${topping.name}${Number.isInteger(topping.price_cents) ? ` (+$${(topping.price_cents / 100).toFixed(2)} each)` : ''}`).join(', ')}</dd></div>
                   )}
                   {item.notes && (
                     <div><dt>Notes</dt><dd>{item.notes}</dd></div>

@@ -6,13 +6,17 @@ export default function DrinkCustomizationModal({
   toppingsLoading,
   toppingsError,
   onClose,
-  onAddToCart
+  onAddToCart,
+  customerFacing = false
 }) {
   const [sugarLevel, setSugarLevel] = useState('100%');
   const [iceLevel, setIceLevel] = useState('Regular');
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState(1);
+
+  const toppingTotalCents = selectedToppings.reduce((total, id) => total + (toppings.find((topping) => topping.inventory_id === id)?.price_cents ?? 0), 0);
+  const unitPriceCents = Math.round(Number(item.price) * 100) + toppingTotalCents;
 
   useEffect(() => {
     function closeOnEscape(event) {
@@ -36,12 +40,13 @@ export default function DrinkCustomizationModal({
       menu_item_id: item.menu_item_id,
       name: item.name,
       quantity,
-      unit_price: Number(item.price),
+      unit_price: unitPriceCents / 100,
       toppings: selectedToppings.map((toppingId) => {
         const topping = toppings.find((candidate) => candidate.inventory_id === toppingId);
         return {
           inventory_id: topping.inventory_id,
-          name: topping.name
+          name: topping.name,
+          price_cents: topping.price_cents
         };
       }),
       sugar_level: sugarLevel,
@@ -111,6 +116,7 @@ export default function DrinkCustomizationModal({
         </fieldset>
         <fieldset className="drink-adjustment-control topping-control">
           <legend>Toppings</legend>
+          <p className="topping-message" style={{ marginBottom: 12 }}>Optional · Prices shown are per topping, per drink.</p>
           {toppingsLoading ? (
             <p className="topping-message" role="status">Loading toppings…</p>
           ) : toppingsError ? (
@@ -121,6 +127,7 @@ export default function DrinkCustomizationModal({
             <div className="topping-options">
               {toppings.map((topping) => {
                 const outOfStock = Number(topping.quantity_on_hand) <= 0;
+                const priceUnavailable = !Number.isInteger(topping.price_cents);
                 return (
                   <label
                     className={`topping-option${selectedToppings.includes(topping.inventory_id) ? ' is-selected' : ''}${outOfStock ? ' is-out-of-stock' : ''}`}
@@ -129,12 +136,14 @@ export default function DrinkCustomizationModal({
                     <input
                       type="checkbox"
                       checked={selectedToppings.includes(topping.inventory_id)}
-                      disabled={outOfStock}
+                      disabled={outOfStock || priceUnavailable}
                       onChange={() => toggleTopping(topping.inventory_id)}
                     />
-                    <span>{topping.name}</span>
+                    <span>{topping.name}{!priceUnavailable && ` (+$${(topping.price_cents / 100).toFixed(2)})`}</span>
                     <span className="topping-stock">
-                      {outOfStock ? 'Out of stock' : `${topping.quantity_on_hand} available`}
+                      {priceUnavailable ? 'Unavailable' : customerFacing
+                        ? (outOfStock ? 'Sold out' : 'Available')
+                        : (outOfStock ? 'Out of stock' : `${topping.quantity_on_hand} available`)}
                     </span>
                   </label>
                 );
@@ -173,9 +182,12 @@ export default function DrinkCustomizationModal({
             </button>
           </div>
           <button className="add-to-cart-button" type="button" onClick={addToCart}>
-            Add to Cart
+            Add to Cart · ${(unitPriceCents * quantity / 100).toFixed(2)}
           </button>
         </div>
+        <p className="topping-message" style={{ marginTop: 12 }} aria-live="polite">
+          {quantity} {quantity === 1 ? 'drink' : 'drinks'} · ${(unitPriceCents * quantity / 100).toFixed(2)} before tax. Selected toppings: +${(toppingTotalCents / 100).toFixed(2)} per drink.
+        </p>
       </section>
     </div>
   );

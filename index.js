@@ -3,6 +3,7 @@ const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv').config();
 const { submitOrder, OrderRequestError } = require('./orderService');
+const { toppingPriceCents } = require('./toppingPrices');
 
 // Create express app
 const app = express();
@@ -83,7 +84,7 @@ app.get('/api/toppings', async (req, res) => {
         const { rows } = await pool.query(
             "SELECT inventory_id, item_name AS name, quantity_on_hand FROM inventory WHERE category = 'Topping' ORDER BY item_name;"
         );
-        res.json({ toppings: rows });
+        res.json({ toppings: rows.map((row) => ({ ...row, price_cents: toppingPriceCents(row.name) })) });
     } catch (error) {
         console.error('Unable to load toppings:', error);
         res.status(500).json({ error: 'Unable to load toppings.' });

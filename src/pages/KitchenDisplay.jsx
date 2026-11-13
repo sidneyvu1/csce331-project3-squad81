@@ -1,3 +1,4 @@
+import { useStaff, StaffControls } from '../auth/StaffAuth';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import OrderTicket from '../components/kitchen/OrderTicket';
@@ -12,6 +13,7 @@ const COLUMNS = [
 ];
 
 export default function KitchenDisplay() {
+  const { request: staffFetch } = useStaff();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,7 +22,7 @@ export default function KitchenDisplay() {
 
   const loadOrders = useCallback(async () => {
     try {
-      const response = await fetch('/api/kitchen/orders');
+      const response = await staffFetch('/api/kitchen/orders');
       if (!response.ok) throw new Error('Unable to load orders.');
       const data = await response.json();
       if (!Array.isArray(data.orders)) throw new Error('Unexpected orders response.');
@@ -31,7 +33,7 @@ export default function KitchenDisplay() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [staffFetch]);
 
   useEffect(() => {
     loadOrders();
@@ -43,7 +45,7 @@ export default function KitchenDisplay() {
     setActionError('');
     setBusyIds((current) => new Set(current).add(orderId));
     try {
-      const response = await fetch(`/api/kitchen/orders/${orderId}/status`, {
+      const response = await staffFetch(`/api/kitchen/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -79,7 +81,7 @@ export default function KitchenDisplay() {
         <div className="cashier-header-actions">
           {errorMessage && <span className="menu-error" role="alert">{errorMessage}</span>}
           <span className="cart-count" aria-live="polite">To make: {activeCount}</span>
-          <Link to="/" className="home-button">Home</Link>
+          <StaffControls /><Link to="/" className="home-button">Home</Link>
         </div>
       </header>
 

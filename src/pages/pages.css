@@ -934,3 +934,5 @@
 .kiosk-checkout .kiosk-payment-option.selected { border-color: #333; background: #f5f3f5; }
 .kiosk-checkout .kiosk-payment-option input { width: 22px; min-height: 0; height: 22px; margin: 0; }
 .kiosk-payment-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.staff-controls { gap: 10px; flex-wrap: wrap; font-size: 14px; color: #555; }

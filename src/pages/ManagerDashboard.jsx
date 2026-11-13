@@ -1,10 +1,11 @@
+import { useStaff, StaffControls } from '../auth/StaffAuth';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import InventoryTable, { inventoryStatus } from '../components/manager/InventoryTable';
 import './pages.css';
 
-async function inventoryRequest(path = '', options) {
-  const response = await fetch(`/api/inventory${path}`, options);
+async function inventoryRequest(staffFetch, path = '', options) {
+  const response = await staffFetch(`/api/inventory${path}`, options);
   if (!response.headers.get('content-type')?.includes('application/json')) {
     throw new Error('Unable to load inventory.');
   }
@@ -14,6 +15,7 @@ async function inventoryRequest(path = '', options) {
 }
 
 export default function ManagerDashboard() {
+  const { request: staffFetch } = useStaff();
   const [section, setSection] = useState('Inventory');
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export default function ManagerDashboard() {
     setLoading(true);
     setError('');
     try {
-      const data = await inventoryRequest();
+      const data = await inventoryRequest(staffFetch);
       if (!Array.isArray(data.inventory)) throw new Error('Invalid inventory response.');
       setInventory(data.inventory);
     } catch (failure) {
@@ -38,7 +40,7 @@ export default function ManagerDashboard() {
   useEffect(() => { loadInventory(); }, []);
 
   async function updateQuantity(item, quantity) {
-    const data = await inventoryRequest(`/${item.inventory_id}`, {
+    const data = await inventoryRequest(staffFetch, `/${item.inventory_id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quantity_on_hand: quantity, expected_quantity: item.quantity_on_hand })
@@ -56,7 +58,7 @@ export default function ManagerDashboard() {
     <div className="page-container manager-page">
       <header className="page-header">
         <div><h1>Manager Dashboard</h1><p className="manager-subtitle">Manage inventory, menu items, employees, and reports.</p></div>
-        <div className="cashier-header-actions"><Link to="/" className="home-button">Home</Link></div>
+        <div className="cashier-header-actions"><StaffControls /><Link to="/" className="home-button">Home</Link></div>
       </header>
       <main className="page-content manager-content">
         <nav className="manager-nav" aria-label="Manager sections">

@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const StaffContext = createContext(null);
 const domain = import.meta.env.VITE_AUTH0_DOMAIN;
@@ -9,10 +9,11 @@ const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 const configured = Boolean(domain && clientId && audience);
 
 export function StaffProvider({ children }) {
+  const navigate = useNavigate();
   if (!configured) return <StaffContext.Provider value={{ configured: false, loading: false }}>{children}</StaffContext.Provider>;
   return <Auth0Provider domain={domain} clientId={clientId}
     authorizationParams={{ redirect_uri: window.location.origin, audience, scope: 'openid profile email' }}
-    onRedirectCallback={(state) => { window.location.replace(state?.returnTo && /^\/(manager|cashier|kitchen)$/.test(state.returnTo) ? state.returnTo : '/'); }}>
+    onRedirectCallback={(state) => { navigate(state?.returnTo && /^\/(manager|cashier|kitchen)$/.test(state.returnTo) ? state.returnTo : '/', { replace: true }); }}>
     <StaffSession>{children}</StaffSession>
   </Auth0Provider>;
 }
@@ -33,6 +34,9 @@ function StaffSession({ children }) {
     setError('');
     try {
       const response = await request('/api/auth/me');
+      if (!response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('Staff sign-in service is unavailable. Restart the backend and try again.');
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Unable to load staff access.');
       setStaff(data.staff);

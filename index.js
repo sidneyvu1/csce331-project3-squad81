@@ -200,6 +200,9 @@ app.use((error, req, res, next) => {
     res.status(500).json({ error: 'Unable to complete the request.' });
 });
 
+// API paths must never fall through to the React HTML page.
+app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
+
 // Fallback: serve React app for all routes
 app.get('/*splat', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));

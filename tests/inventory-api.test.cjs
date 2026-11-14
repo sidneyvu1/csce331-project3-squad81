@@ -12,7 +12,7 @@ function api(query) {
       if (name === 'express') return express;
       if (name === 'pg') return { Pool: function () { this.query = query; } };
       if (name === 'dotenv') return { config() {} };
-      return require(name === './orderService' ? '../orderService' : name);
+      return require(name.startsWith('./') ? `.${name}` : name);
     },
     process: { env: {}, on() {} }, __dirname: __dirname, console: { error() {} }
   });

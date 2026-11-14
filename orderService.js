@@ -1,6 +1,15 @@
 const SUGAR_LEVELS = new Set(['100%', '70%', '50%', '30%', '0%']);
 const ICE_LEVELS = new Set(['Regular', 'Less', 'No Ice']);
 const TAX_RATE = 0.0825;
+const { toppingPriceCents } = require('./toppingPrices');
+
+function itemPriceCents(item, menuPrices, inventoryById) {
+    return menuPrices.get(item.menuItemId) + item.toppings.reduce((total, id) => {
+        const price = toppingPriceCents(inventoryById.get(id).item_name);
+        if (price === null) throw new OrderRequestError('A selected topping is not currently available for purchase.');
+        return total + price;
+    }, 0);
+}
 
 class OrderRequestError extends Error {
     constructor(message, statusCode = 400) {
@@ -151,9 +160,9 @@ async function deductInventory(client, inventoryRequirements) {
     }
 }
 
-function calculateOrderTotals(items, menuPrices) {
+function calculateOrderTotals(items, menuPrices, inventoryById) {
     const subtotalCents = items.reduce(
-        (total, item) => total + menuPrices.get(item.menuItemId) * item.quantity,
+        (total, item) => total + itemPriceCents(item, menuPrices, inventoryById) * item.quantity,
         0
     );
     if (subtotalCents > 99999999) {
@@ -185,7 +194,7 @@ async function insertOrderItems(client, orderId, items, menuPrices, inventoryByI
     for (const item of items) {
         const toppingList = item.toppings.map((id) => {
             const topping = inventoryById.get(id);
-            return { inventory_id: topping.inventory_id, name: topping.item_name };
+            return { inventory_id: topping.inventory_id, name: topping.item_name, price_cents: toppingPriceCents(topping.item_name) };
         });
 
         await client.query(
@@ -194,7 +203,7 @@ async function insertOrderItems(client, orderId, items, menuPrices, inventoryByI
                 orderId,
                 item.menuItemId,
                 item.quantity,
-                (menuPrices.get(item.menuItemId) / 100).toFixed(2),
+                (itemPriceCents(item, menuPrices, inventoryById) / 100).toFixed(2),
                 JSON.stringify(toppingList),
                 item.sugarLevel,
                 item.iceLevel,
@@ -212,7 +221,7 @@ async function submitOrder(pool, rawItems) {
         await client.query('BEGIN');
         const menuPrices = await loadMenuPrices(client, items);
         const { inventoryById, inventoryRequirements } = await loadAndLockInventory(client, items);
-        const totals = calculateOrderTotals(items, menuPrices);
+        const totals = calculateOrderTotals(items, menuPrices, inventoryById);
         const orderId = await insertOrder(client, totals);
         await insertOrderItems(client, orderId, items, menuPrices, inventoryById);
         await deductInventory(client, inventoryRequirements);

@@ -39,7 +39,7 @@ export default function KioskCheckout({
                 <strong>{money(Math.round(item.unit_price * 100) * item.quantity / 100)}</strong>
               </div>
               <p>{money(item.unit_price)} each · Sugar: {item.sugar_level} · Ice: {item.ice_level}</p>
-              {item.toppings.length > 0 && <p>Toppings: {item.toppings.map((topping) => topping.name).join(', ')}</p>}
+              {item.toppings.length > 0 && <p>Toppings: {item.toppings.map((topping) => `${topping.name}${Number.isInteger(topping.price_cents) ? ` (+$${(topping.price_cents / 100).toFixed(2)} each)` : ''}`).join(', ')}</p>}
               {item.notes && <p>Notes: {item.notes}</p>}
             </li>
           ))}

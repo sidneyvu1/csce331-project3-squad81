@@ -256,6 +256,7 @@ export default function CustomerKiosk() {
 
       {selectedItem && (
         <DrinkCustomizationModal
+          customerFacing
           item={selectedItem}
           toppings={toppings}
           toppingsLoading={toppingsLoading}

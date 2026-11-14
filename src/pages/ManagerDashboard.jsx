@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import InventoryTable, { inventoryStatus } from '../components/manager/InventoryTable';
 import ManageEmployees from '../components/manager/ManageEmployees';
+import ManageMenu from '../components/manager/ManageMenu';
 import './pages.css';
 
 async function inventoryRequest(path = '', options) {
@@ -24,6 +25,16 @@ async function employeesRequest(path = '', options) {
   return data;
 }
 
+async function menuRequest(path = '', options) {
+  const response = await fetch(`/api/menu${path}`, options);
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    throw new Error('Unable to load menu.');
+  }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Unable to load menu.');
+  return data;
+}
+
 export default function ManagerDashboard() {
   const [section, setSection] = useState('Inventory');
   const [inventory, setInventory] = useState([]);
@@ -37,20 +48,9 @@ export default function ManagerDashboard() {
   const [employeesLoading, setEmployeesLoading] = useState(true);
   const [employeesError, setEmployeesError] = useState('');
 
-  async function loadEmployees() {
-    setEmployeesLoading(true);
-    setEmployeesError('');
-    try {
-      const data = await employeesRequest();
-      if (!Array.isArray(data.employees)) throw new Error('Invalid employees response.');
-      setEmployees(data.employees);
-    } catch (failure) {
-      setEmployeesError(failure.message);
-    } finally {
-      setEmployeesLoading(false);
-    }
-  }
-  useEffect(() => { loadEmployees(); }, []);
+  const [menu, setMenu] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState('');
 
   async function loadInventory() {
     setLoading(true);
@@ -65,7 +65,39 @@ export default function ManagerDashboard() {
       setLoading(false);
     }
   }
+
+  async function loadEmployees() {
+    setEmployeesLoading(true);
+    setEmployeesError('');
+    try {
+      const data = await employeesRequest();
+      if (!Array.isArray(data.employees)) throw new Error('Invalid employees response.');
+      setEmployees(data.employees);
+    } catch (failure) {
+      setEmployeesError(failure.message);
+    } finally {
+      setEmployeesLoading(false);
+    }
+  }
+
+  async function loadMenu() {
+    setMenuLoading(true);
+    setMenuError('');
+    try {
+      const data = await menuRequest();
+      if (!Array.isArray(data.menuItems)) throw new Error('Invalid menu response.');
+      setMenu(data.menuItems);
+    } catch (failure) {
+      setMenuError(failure.message);
+    } finally {
+      setMenuLoading(false);
+    }
+  }
+
+
   useEffect(() => { loadInventory(); }, []);
+  useEffect(() => { loadEmployees(); }, []);
+  useEffect(() => { loadMenu(); }, []);
 
   async function updateQuantity(item, quantity) {
     const data = await inventoryRequest(`/${item.inventory_id}`, {
@@ -121,32 +153,26 @@ export default function ManagerDashboard() {
         </>
           : section === 'Employees' ? (
             <ManageEmployees employees={employees} />
-          ) : (
+          ) : section === 'Menu' ? (
+            <ManageMenu menuItems = {menu} /> ):
+          (
             <section className="cashier-menu manager-placeholder">
               <div className="cashier-menu-heading">
                 <h2>{section}</h2>
                 <p>
                   {section} management is not available yet.
-                  Inventory and employee management are ready to use.
                 </p>
               </div>
 
               <button
                 className="manager-small-button"
                 type="button"
-                onClick={() => setSection('Inventory')}
+                onClick={() => setSection('Overview')}
               >
-                Go to Inventory
+                Go to Overview
               </button>
             </section>)}
           </main>
        </div>
      );
    }
-         
-//         ) : 
-//         <section className="cashier-menu manager-placeholder"><div className="cashier-menu-heading"><h2>{section}</h2><p>{section} management is not available yet. Inventory management is ready to use.</p></div><button className="manager-small-button" type="button" onClick={() => setSection('Inventory')}>Go to Inventory</button></section>}
-//       </main>
-//     </div>
-//   );
-// }

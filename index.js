@@ -30,6 +30,21 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.json({ limit: '100kb' }));
 
 // API Routes
+
+//employees
+app.get('/api/employees', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT employee_id, first_name, last_name, role, hourly_wage FROM employees ORDER BY employee_id;'
+        );
+        res.json({ employees: rows });
+    } catch (error) {
+        console.error('Unable to load employees:', error);
+        res.status(500).json({ error: 'Unable to load employees.' });
+    }
+});
+
+//inventory
 app.get('/api/inventory', async (req, res) => {
     try {
         const { rows } = await pool.query(

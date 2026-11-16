@@ -5,6 +5,7 @@ const dotenv = require('dotenv').config();
 const { submitOrder, OrderRequestError } = require('./orderService');
 const { createStaffAuth } = require('./staffAuth');
 const { toppingPriceCents } = require('./toppingPrices');
+const { runAssistant, createRateLimiter, AssistantRequestError } = require('./assistantService');
 
 // Create express app
 const app = express();
@@ -110,6 +111,26 @@ app.get('/api/toppings', async (req, res) => {
     } catch (error) {
         console.error('Unable to load toppings:', error);
         res.status(500).json({ error: 'Unable to load toppings.' });
+    }
+});
+
+const allowAssistantRequest = createRateLimiter({ limit: 20, windowMs: 60_000 });
+app.post('/api/assistant', async (req, res) => {
+    if (!allowAssistantRequest(req.ip)) {
+        return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+    }
+    try {
+        const result = await runAssistant(pool, req.body?.messages, {
+            apiKey: process.env.GEMINI_API_KEY,
+            model: process.env.GEMINI_MODEL || undefined
+        });
+        res.json(result);
+    } catch (error) {
+        if (error instanceof AssistantRequestError) {
+            return res.status(error.statusCode).json({ error: error.message });
+        }
+        console.error('Assistant failed:', error);
+        res.status(500).json({ error: 'The assistant is unavailable right now.' });
     }
 });
 

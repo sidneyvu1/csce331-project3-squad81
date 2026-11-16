@@ -962,3 +962,24 @@
 .hub-header h1 { font-size: 44px; line-height: 1.1; }
 .hub-header .subtitle { margin-top: 10px; font-size: 16px; }
 @media (max-width: 560px) { .hub-header h1 { font-size: 32px; } .staff-chip { flex-wrap: wrap; } }
+
+/* Kiosk ordering assistant */
+.assistant-launcher { position: fixed; right: 24px; bottom: 24px; z-index: 20; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px; background: #686568; color: white; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); }
+.assistant-launcher:hover { background: #4f4d4f; }
+.assistant-panel { position: fixed; right: 24px; bottom: 24px; z-index: 20; display: flex; flex-direction: column; box-sizing: border-box; width: min(380px, calc(100vw - 32px)); height: min(560px, calc(100vh - 48px)); border: 1px solid #e4e1e4; border-radius: 16px; background: white; color: #333; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2); overflow: hidden; }
+.assistant-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #686568; color: white; }
+.assistant-close { width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: white; font-size: 24px; line-height: 1; cursor: pointer; }
+.assistant-close:hover { background: rgba(255, 255, 255, 0.18); }
+.assistant-messages { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px; overflow-y: auto; background: #f8f7f8; }
+.assistant-bubble { max-width: 85%; margin: 0; padding: 10px 14px; border-radius: 14px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
+.assistant-bubble p { margin: 0; }
+.assistant-bubble-bot { align-self: flex-start; border: 1px solid #e4e1e4; background: white; }
+.assistant-bubble-user { align-self: flex-end; background: #686568; color: white; }
+.assistant-added { margin: 8px 0 0; padding: 8px 0 0 18px; border-top: 1px solid #e4e1e4; color: #246b36; font-size: 13px; font-weight: 700; }
+.assistant-typing { letter-spacing: 3px; color: #888; }
+.assistant-suggestions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.assistant-error { margin: 0; padding: 10px 12px; border: 1px solid #e8c9c9; border-radius: 8px; background: #fbf1f1; color: #8a2424; font-size: 14px; }
+.assistant-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e4e1e4; background: white; }
+.assistant-form input { flex: 1; min-width: 0; box-sizing: border-box; padding: 10px 12px; border: 1px solid #bbb; border-radius: 8px; font: inherit; }
+.assistant-form .submit-order-button { margin-top: 0; min-height: 42px; }
+.assistant-panel button:focus-visible, .assistant-launcher:focus-visible, .assistant-form input:focus-visible { outline: 3px solid #686568; outline-offset: 2px; }

@@ -5,6 +5,7 @@ import DrinkCustomizationModal from '../components/cashier/DrinkCustomizationMod
 import MenuBrowser from '../components/cashier/MenuBrowser';
 import KioskCheckout from '../components/kiosk/KioskCheckout';
 import KioskPayment from '../components/kiosk/KioskPayment';
+import AssistantChat from '../components/kiosk/AssistantChat';
 import './pages.css';
 
 async function fetchToppings() {
@@ -50,6 +51,12 @@ export default function CustomerKiosk() {
     setSubmitError('');
     setCart((current) => [...current, { ...item, id: nextCartItemId.current++ }]);
     setSelectedItem(null);
+  }
+
+  function addAssistantItems(items) {
+    setCompletedOrder(null);
+    setSubmitError('');
+    setCart((current) => [...current, ...items.map((item) => ({ ...item, id: nextCartItemId.current++ }))]);
   }
 
   function updateCartQuantity(itemId, change) {
@@ -253,6 +260,8 @@ export default function CustomerKiosk() {
         </div>
         )}
       </main>
+
+      {checkoutStep === 'menu' && <AssistantChat disabled={submittingOrder} onAddItems={addAssistantItems} />}
 
       {selectedItem && (
         <DrinkCustomizationModal

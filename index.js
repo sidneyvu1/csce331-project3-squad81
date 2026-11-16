@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv').config();
-const { submitOrder, OrderRequestError } = require('./orderService');
+const { submitOrder, getRewardsBalance, OrderRequestError } = require('./orderService');
 const { createStaffAuth } = require('./staffAuth');
 const { toppingPriceCents } = require('./toppingPrices');
 const { runAssistant, createRateLimiter, AssistantRequestError } = require('./assistantService');
@@ -134,9 +134,25 @@ app.post('/api/assistant', async (req, res) => {
     }
 });
 
+const allowRewardsLookup = createRateLimiter({ limit: 20, windowMs: 60_000 });
+app.post('/api/rewards/lookup', async (req, res) => {
+    if (!allowRewardsLookup(req.ip)) {
+        return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+    }
+    try {
+        res.json(await getRewardsBalance(pool, req.body?.phone));
+    } catch (error) {
+        if (error instanceof OrderRequestError) return res.status(error.statusCode).json({ error: error.message });
+        console.error('Unable to load rewards:', error);
+        res.status(500).json({ error: 'Unable to load rewards.' });
+    }
+});
+
 async function handleOrder(req, res) {
     try {
-        const order = await submitOrder(pool, req.body?.items, req.staff?.employee_id ?? null);
+        // Rewards are only accepted from the public kiosk route, not the staff routes.
+        const rewards = req.staff ? null : { phone: req.body?.rewards_phone, redeem: req.body?.redeem_reward === true };
+        const order = await submitOrder(pool, req.body?.items, req.staff?.employee_id ?? null, rewards);
         return res.status(201).json({ order });
     } catch (error) {
         if (error instanceof OrderRequestError) {

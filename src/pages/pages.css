@@ -983,3 +983,8 @@
 .assistant-form input { flex: 1; min-width: 0; box-sizing: border-box; padding: 10px 12px; border: 1px solid #bbb; border-radius: 8px; font: inherit; }
 .assistant-form .submit-order-button { margin-top: 0; min-height: 42px; }
 .assistant-panel button:focus-visible, .assistant-launcher:focus-visible, .assistant-form input:focus-visible { outline: 3px solid #686568; outline-offset: 2px; }
+
+/* Rewards */
+.kiosk-reward-discount dt, .kiosk-reward-discount dd { color: #246b36; font-weight: 700; }
+.kiosk-redeem-actions { margin-top: 28px; }
+.kiosk-checkout .kiosk-rewards-note { margin: 12px 0 0; }

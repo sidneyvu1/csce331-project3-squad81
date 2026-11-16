@@ -5,6 +5,7 @@ import DrinkCustomizationModal from '../components/cashier/DrinkCustomizationMod
 import MenuBrowser from '../components/cashier/MenuBrowser';
 import KioskCheckout from '../components/kiosk/KioskCheckout';
 import KioskPayment from '../components/kiosk/KioskPayment';
+import KioskRedeem from '../components/kiosk/KioskRedeem';
 import AssistantChat from '../components/kiosk/AssistantChat';
 import './pages.css';
 
@@ -37,14 +38,53 @@ export default function CustomerKiosk() {
   const [completedOrder, setCompletedOrder] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState('menu');
   const [rewardsPhone, setRewardsPhone] = useState('');
+  const [rewardsInfo, setRewardsInfo] = useState(null);
+  const [redeemReward, setRedeemReward] = useState(false);
+  const [lookingUpRewards, setLookingUpRewards] = useState(false);
 
   const cartDrinkCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotalCents = cart.reduce(
     (total, item) => total + Math.round(item.unit_price * 100) * item.quantity,
     0
   );
-  const taxCents = Math.round(subtotalCents * 0.0825);
-  const totalCents = subtotalCents + taxCents;
+  // Redeeming makes one unit of the cheapest drink free. The server recomputes this authoritatively.
+  const cheapestItem = cart.reduce((best, item) => (!best || item.unit_price < best.unit_price ? item : best), null);
+  const rewardDiscountCents = redeemReward && cheapestItem ? Math.round(cheapestItem.unit_price * 100) : 0;
+  const taxCents = Math.round((subtotalCents - rewardDiscountCents) * 0.0825);
+  const totalCents = subtotalCents - rewardDiscountCents + taxCents;
+
+  function resetRewards() {
+    setRedeemReward(false);
+    setRewardsInfo(null);
+  }
+
+  async function continueFromRewards(normalizedPhone) {
+    setRewardsPhone(normalizedPhone);
+    setSubmitError('');
+    setRedeemReward(false);
+    if (!normalizedPhone) {
+      setRewardsInfo(null);
+      setCheckoutStep('payment');
+      return;
+    }
+
+    setLookingUpRewards(true);
+    try {
+      const response = await fetch('/api/rewards/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalizedPhone })
+      });
+      const data = (response.headers.get('content-type') || '').includes('application/json') ? await response.json() : {};
+      if (!response.ok) throw new Error(data.error || 'Unable to look up rewards.');
+      setRewardsInfo(data);
+      setCheckoutStep(data.can_redeem && cart.length > 0 ? 'redeem' : 'payment');
+    } catch (lookupFailure) {
+      setSubmitError(`${lookupFailure.message || 'Unable to look up rewards.'} You can try again or skip rewards.`);
+    } finally {
+      setLookingUpRewards(false);
+    }
+  }
 
   function addToCart(item) {
     setCompletedOrder(null);
@@ -94,7 +134,10 @@ export default function CustomerKiosk() {
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: orderItems })
+        body: JSON.stringify({
+          items: orderItems,
+          ...(rewardsPhone && { rewards_phone: rewardsPhone, redeem_reward: redeemReward })
+        })
       });
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
@@ -115,6 +158,7 @@ export default function CustomerKiosk() {
       }
 
       setCart([]);
+      resetRewards();
       setCompletedOrder({ ...data.order, items: cart, rewardsPhone, payment });
       setCheckoutStep('confirmation');
       try {
@@ -207,7 +251,17 @@ export default function CustomerKiosk() {
             submitting={submittingOrder}
             error={submitError}
             onPay={submitOrder}
-            onBack={() => { setSubmitError(''); setCheckoutStep('rewards'); }}
+            onBack={() => { setSubmitError(''); resetRewards(); setCheckoutStep('rewards'); }}
+          />
+        ) : checkoutStep === 'redeem' && rewardsInfo && cheapestItem ? (
+          <KioskRedeem
+            points={rewardsInfo.points}
+            redeemPoints={rewardsInfo.redeem_points}
+            freeItem={cheapestItem}
+            discountCents={Math.round(cheapestItem.unit_price * 100)}
+            onRedeem={() => { setRedeemReward(true); setCheckoutStep('payment'); }}
+            onSkip={() => { setRedeemReward(false); setCheckoutStep('payment'); }}
+            onBack={() => { resetRewards(); setCheckoutStep('rewards'); }}
           />
         ) : checkoutStep !== 'menu' ? (
           <KioskCheckout
@@ -216,17 +270,14 @@ export default function CustomerKiosk() {
             phone={rewardsPhone}
             onPhoneChange={setRewardsPhone}
             totalCents={totalCents}
-            submitting={submittingOrder}
+            submitting={submittingOrder || lookingUpRewards}
             error={submitError}
-            onContinue={(normalizedPhone) => {
-              setRewardsPhone(normalizedPhone);
-              setSubmitError('');
-              setCheckoutStep('payment');
-            }}
-            onBack={() => { setSubmitError(''); setCheckoutStep('menu'); }}
+            onContinue={continueFromRewards}
+            onBack={() => { setSubmitError(''); resetRewards(); setCheckoutStep('menu'); }}
             onNewOrder={() => {
               setCompletedOrder(null);
               setRewardsPhone('');
+              resetRewards();
               setSubmitError('');
               setCheckoutStep('menu');
             }}

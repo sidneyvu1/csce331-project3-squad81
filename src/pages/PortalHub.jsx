@@ -6,9 +6,11 @@ import './pages.css';
 export default function PortalHub() {
   return (
     <div className="hub-container">
-      <h1>Bubble Tea POS System</h1>
-      <StaffControls />
-      <p className="subtitle">Select a view:</p>
+      <header className="hub-header">
+        <h1>Bubble Tea POS System</h1>
+        <StaffControls />
+        <p className="subtitle">Select a view:</p>
+      </header>
 
       <div className="button-grid">
         <Link to="/cashier" className="hub-button">

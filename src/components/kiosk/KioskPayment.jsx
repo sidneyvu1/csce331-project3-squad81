@@ -54,6 +54,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
   const busy = processing || submitting;
+  const free = totalCents === 0;
 
   useEffect(() => { heading.current?.focus(); }, []);
 
@@ -66,8 +67,8 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
     event.preventDefault();
     if (busy) return;
 
-    let payment = { method: 'counter' };
-    if (method === 'card') {
+    let payment = { method: free ? 'rewards' : 'counter' };
+    if (!free && method === 'card') {
       const found = validateCard(card);
       if (Object.keys(found).length > 0) {
         setErrors(found);
@@ -79,7 +80,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
     // Payment is simulated for this project: card details stay in this component
     // and are never sent to the server or stored.
     setProcessing(true);
-    if (method === 'card') await new Promise((resolve) => setTimeout(resolve, 1200));
+    if (!free && method === 'card') await new Promise((resolve) => setTimeout(resolve, 1200));
     setProcessing(false);
     onPay(payment);
   }
@@ -98,6 +99,9 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
       <h2 id="checkout-heading" ref={heading} tabIndex={-1}>Pay!</h2>
 
       <form onSubmit={pay} noValidate>
+        {free ? (
+          <p>Your rewards cover this whole order, so there is nothing to pay. Place your order to finish.</p>
+        ) : (<>
         <fieldset className="kiosk-payment-methods" disabled={busy}>
           <legend>Payment method</legend>
           <label className={method === 'card' ? 'kiosk-payment-option selected' : 'kiosk-payment-option'}>
@@ -143,12 +147,13 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
         ) : (
           <p>Place your order now and pay the cashier when you pick up your drinks.</p>
         )}
+        </>)}
 
         <div className="kiosk-checkout-total"><span>Order total</span><strong>{money(totalCents / 100)}</strong></div>
         {error && <p className="menu-error" role="alert">{error}</p>}
         <div className="kiosk-checkout-actions">
           <button type="submit" className="submit-order-button" disabled={busy}>
-            {processing ? 'Processing payment…' : submitting ? 'Placing order…' : method === 'card' ? `Pay ${money(totalCents / 100)}` : 'Place order'}
+            {processing ? 'Processing payment…' : submitting ? 'Placing order…' : !free && method === 'card' ? `Pay ${money(totalCents / 100)}` : 'Place order'}
           </button>
           <button type="button" className="kiosk-back-button" disabled={busy} onClick={onBack}>Back to rewards</button>
         </div>

@@ -46,6 +46,7 @@ export default function KioskCheckout({
         </ul>
         <dl className="cart-totals">
           <div><dt>Subtotal</dt><dd>{money(order.subtotal)}</dd></div>
+          {Number(order.reward_discount) > 0 && <div className="kiosk-reward-discount"><dt>Rewards discount</dt><dd>-{money(order.reward_discount)}</dd></div>}
           <div><dt>Tax (8.25%)</dt><dd>{money(order.tax)}</dd></div>
           <div className="cart-total"><dt>Order total</dt><dd>{money(order.total)}</dd></div>
         </dl>
@@ -53,11 +54,17 @@ export default function KioskCheckout({
           <p className="kiosk-rewards-note">
             {order.payment.method === 'card'
               ? `Paid with card ending in ${order.payment.last4}.`
-              : 'Payment due at the counter when you pick up your order.'}
+              : order.payment.method === 'rewards'
+                ? 'Paid in full with your rewards.'
+                : 'Payment due at the counter when you pick up your order.'}
           </p>
         )}
         {order.rewardsPhone && (
-          <p className="kiosk-rewards-note">Rewards phone entered: xxx xxx {order.rewardsPhone.slice(-4)}.</p>
+          <p className="kiosk-rewards-note">
+            Rewards account xxx xxx {order.rewardsPhone.slice(-4)}.
+            {order.points_redeemed > 0 && ` Redeemed ${order.points_redeemed} points.`}
+            {order.points_earned != null && ` Earned ${order.points_earned} points. New balance: ${order.points_balance} points.`}
+          </p>
         )}
         <button type="button" className="submit-order-button" onClick={onNewOrder}>Start a new order</button>
       </section>
@@ -81,7 +88,7 @@ export default function KioskCheckout({
         <div className="kiosk-checkout-total"><span>Order total</span><strong>{money(totalCents / 100)}</strong></div>
         {error && <p className="menu-error" role="alert">{error}</p>}
         <div className="kiosk-checkout-actions">
-          <button type="submit" className="submit-order-button" disabled={submitting}>Add number & continue</button>
+          <button type="submit" className="submit-order-button" disabled={submitting}>{submitting ? 'Checking rewards…' : 'Add number & continue'}</button>
           <button type="button" className="kiosk-secondary-button" disabled={submitting} onClick={() => { setPhoneError(''); onContinue(''); }}>Skip rewards & continue</button>
           <button type="button" className="kiosk-back-button" disabled={submitting} onClick={onBack}>Back to my order</button>
         </div>

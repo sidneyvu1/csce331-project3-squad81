@@ -39,6 +39,19 @@ app.get('/api/auth/me', ...requireRoles('manager', 'cashier', 'kitchen'), (req, 
 });
 
 // API Routes
+//manager reports
+app.get('/api/reports', ...requireRoles('manager'), async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+        "SELECT m.name, SUM(oi.quantity) AS sold FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id"
+        + "JOIN orders o ON o.order_id = oi.order_id GROUP BY m.name ORDER BY sold DESC LIMIT 10;"
+        );
+        res.json({ reports: rows });
+    } catch (error) {
+        console.error('Unable to load top drink reports:', error);
+        res.status(500).json({ error: 'Unable to load top drink reports.' });
+    }
+});
 
 //employees
 app.get('/api/employees', ...requireRoles('manager'), async (req, res) => {

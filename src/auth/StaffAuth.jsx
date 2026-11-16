@@ -55,8 +55,13 @@ export function useStaff() { return useContext(StaffContext); }
 export function StaffControls() {
   const auth = useStaff();
   if (!auth.configured) return null;
+  const name = auth.staff?.display_name;
   return <div className="cashier-header-actions staff-controls">
-    {auth.staff && <span>{auth.staff.display_name} · {auth.staff.role}</span>}
+    {auth.staff && <span className="staff-chip">
+      <span className="staff-avatar" aria-hidden="true">{(name || '?').trim().charAt(0).toUpperCase()}</span>
+      <span className="staff-name">{name}</span>
+      <span className="staff-role">{auth.staff.role}</span>
+    </span>}
     {auth.authenticated && <button className="manager-small-button" onClick={auth.logout}>Log out</button>}
   </div>;
 }
@@ -65,11 +70,25 @@ export function StaffRoute({ roles, children }) {
   const auth = useStaff();
   if (auth.loading) return <div className="hub-container" role="status">Checking staff access…</div>;
   if (auth.staff && roles.includes(auth.staff.role)) return children;
+  const message = !auth.configured ? 'Staff sign-in has not been configured yet.' : auth.error || (auth.authenticated ? 'Your account does not have access to this area.' : 'Sign in with your staff account to continue.');
+  const isProblem = !auth.configured || Boolean(auth.error) || auth.authenticated;
   return <div className="hub-container">
-    <h1>Staff access</h1>
-    <p>{!auth.configured ? 'Staff sign-in has not been configured yet.' : auth.error || (auth.authenticated ? 'Your account does not have access to this area.' : 'Sign in with your staff account to continue.')}</p>
-    {auth.configured && !auth.authenticated && <button className="submit-order-button" onClick={() => auth.login(window.location.pathname)}>Sign in</button>}
-    {auth.authenticated && <><button className="manager-small-button" onClick={auth.retry}>Retry access</button><button className="manager-small-button" onClick={() => auth.login(window.location.pathname)}>Sign in again</button><StaffControls /></>}
-    <Link className="home-button" to="/">Home</Link>
+    <main className="staff-access-card">
+      <div className="staff-access-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+      </div>
+      <p className="kiosk-eyebrow">Bubble Tea POS</p>
+      <h1>Staff access</h1>
+      <p className={isProblem ? 'staff-access-message staff-access-message-problem' : 'staff-access-message'} role={isProblem ? 'alert' : undefined}>{message}</p>
+      <div className="staff-access-actions">
+        {auth.configured && !auth.authenticated && <button className="submit-order-button" onClick={() => auth.login(window.location.pathname)}>Sign in</button>}
+        {auth.authenticated && <>
+          <button className="submit-order-button" onClick={auth.retry}>Retry access</button>
+          <button className="manager-small-button" onClick={() => auth.login(window.location.pathname)}>Sign in again</button>
+          <button className="manager-small-button" onClick={auth.logout}>Log out</button>
+        </>}
+        <Link className="staff-access-home" to="/">Back to home</Link>
+      </div>
+    </main>
   </div>;
 }

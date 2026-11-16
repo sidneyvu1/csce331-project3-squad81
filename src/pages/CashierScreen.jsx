@@ -1,3 +1,4 @@
+import { useStaff, StaffControls } from '../auth/StaffAuth';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CartPanel from '../components/cashier/CartPanel';
@@ -20,6 +21,7 @@ async function fetchToppings() {
 }
 
 export default function CashierScreen() {
+  const { request: staffFetch } = useStaff();
   const nextCartItemId = useRef(1);
   const [cart, setCart] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -80,7 +82,7 @@ export default function CashierScreen() {
     }));
 
     try {
-      const response = await fetch('/api/orders', {
+      const response = await staffFetch('/api/staff/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: orderItems })
@@ -125,7 +127,7 @@ export default function CashierScreen() {
 
     async function loadMenu() {
       try {
-        const response = await fetch('/api/menu');
+        const response = await staffFetch('/api/menu');
         if (!response.ok) {
           throw new Error('Unable to load the menu. Refresh the page to try again.');
         }
@@ -184,7 +186,7 @@ export default function CashierScreen() {
         <h1>Cashier Screen</h1>
         <div className="cashier-header-actions">
           <span className="cart-count" aria-live="polite">Cart: {cartDrinkCount}</span>
-          <Link to="/" className="home-button">Home</Link>
+          <StaffControls /><Link to="/" className="home-button">Home</Link>
         </div>
       </header>
 

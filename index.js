@@ -3,6 +3,7 @@ const path = require('path');
 const { Pool } = require('pg');
 const dotenv = require('dotenv').config();
 const { submitOrder, OrderRequestError } = require('./orderService');
+const { createStaffAuth } = require('./staffAuth');
 const { toppingPriceCents } = require('./toppingPrices');
 
 // Create express app
@@ -30,10 +31,16 @@ process.on('SIGINT', function() {
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.json({ limit: '100kb' }));
 
+const { requireRoles } = createStaffAuth(pool);
+app.get('/api/auth/me', ...requireRoles('manager', 'cashier', 'kitchen'), (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ staff: req.staff });
+});
+
 // API Routes
 
 //employees
-app.get('/api/employees', async (req, res) => {
+app.get('/api/employees', ...requireRoles('manager'), async (req, res) => {
     try {
         const { rows } = await pool.query(
             'SELECT employee_id, first_name, last_name, role, hourly_wage FROM employees ORDER BY employee_id;'
@@ -46,7 +53,7 @@ app.get('/api/employees', async (req, res) => {
 });
 
 //inventory
-app.get('/api/inventory', async (req, res) => {
+app.get('/api/inventory', ...requireRoles('manager'), async (req, res) => {
     try {
         const { rows } = await pool.query(
             'SELECT inventory_id, item_name, category, unit, quantity_on_hand, reorder_threshold FROM inventory ORDER BY item_name;'
@@ -58,7 +65,7 @@ app.get('/api/inventory', async (req, res) => {
     }
 });
 
-app.patch('/api/inventory/:id', async (req, res) => {
+app.patch('/api/inventory/:id', ...requireRoles('manager'), async (req, res) => {
     const id = Number(req.params.id);
     const quantity = req.body?.quantity_on_hand;
     const expectedQuantity = req.body?.expected_quantity;
@@ -106,9 +113,9 @@ app.get('/api/toppings', async (req, res) => {
     }
 });
 
-app.post('/api/orders', async (req, res) => {
+async function handleOrder(req, res) {
     try {
-        const order = await submitOrder(pool, req.body?.items);
+        const order = await submitOrder(pool, req.body?.items, req.staff?.employee_id ?? null);
         return res.status(201).json({ order });
     } catch (error) {
         if (error instanceof OrderRequestError) {
@@ -118,7 +125,9 @@ app.post('/api/orders', async (req, res) => {
         console.error('Unable to submit order:', error);
         return res.status(500).json({ error: 'Unable to submit order.' });
     }
-});
+}
+app.post('/api/orders', handleOrder);
+app.post('/api/staff/orders', ...requireRoles('manager', 'cashier'), handleOrder);
 
 const KITCHEN_STATUSES = ['pending', 'preparing', 'ready', 'completed'];
 
@@ -131,7 +140,7 @@ function parseToppingNames(toppings) {
     }
 }
 
-app.get('/api/kitchen/orders', async (req, res) => {
+app.get('/api/kitchen/orders', ...requireRoles('manager', 'kitchen'), async (req, res) => {
     try {
         const { rows } = await pool.query(
             `SELECT o.order_id, o.kitchen_status AS status,
@@ -169,7 +178,7 @@ app.get('/api/kitchen/orders', async (req, res) => {
     }
 });
 
-app.patch('/api/kitchen/orders/:id/status', async (req, res) => {
+app.patch('/api/kitchen/orders/:id/status', ...requireRoles('manager', 'kitchen'), async (req, res) => {
     const id = Number(req.params.id);
     const status = req.body?.status;
     if (!Number.isSafeInteger(id) || id <= 0 || !KITCHEN_STATUSES.includes(status)) {
@@ -188,7 +197,7 @@ app.patch('/api/kitchen/orders/:id/status', async (req, res) => {
     }
 });
 
-app.get('/api/user', (req, res) => {
+app.get('/api/user', ...requireRoles('manager'), (req, res) => {
     const teammembers = [];
     pool
         .query('SELECT * FROM teammembers;')
@@ -199,6 +208,15 @@ app.get('/api/user', (req, res) => {
             res.json({ teammembers: teammembers });
         });
 });
+
+app.use((error, req, res, next) => {
+    if ([400, 401, 403].includes(error.status)) return res.status(error.status).json({ error: 'Staff session expired or invalid. Please sign in again.' });
+    console.error('Request failed:', error);
+    res.status(500).json({ error: 'Unable to complete the request.' });
+});
+
+// API paths must never fall through to the React HTML page.
+app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
 
 // Fallback: serve React app for all routes
 app.get('/*splat', (req, res) => {

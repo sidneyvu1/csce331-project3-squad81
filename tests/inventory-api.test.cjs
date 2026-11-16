@@ -5,7 +5,7 @@ const fs = require('node:fs');
 
 function api(query) {
   const routes = {};
-  const app = { use() {}, get(path, handler) { routes[`GET ${path}`] = handler; }, patch(path, handler) { routes[`PATCH ${path}`] = handler; }, post() {}, listen() {} };
+  const app = { use() {}, get(path, ...handlers) { routes[`GET ${path}`] = handlers.at(-1); }, patch(path, ...handlers) { routes[`PATCH ${path}`] = handlers.at(-1); }, post() {}, listen() {} };
   const express = Object.assign(() => app, { static() {}, json() {} });
   vm.runInNewContext(fs.readFileSync(require.resolve('../index.js'), 'utf8'), {
     require(name) {

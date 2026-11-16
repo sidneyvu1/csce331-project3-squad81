@@ -178,13 +178,14 @@ function calculateOrderTotals(items, menuPrices, inventoryById) {
     };
 }
 
-async function insertOrder(client, totals) {
+async function insertOrder(client, totals, employeeId) {
     const { rows } = await client.query(
-        "INSERT INTO orders (order_time, employee_id, total, number_of_drinks, tax, kitchen_status) VALUES (CURRENT_TIMESTAMP, NULL, $1, $2, $3, 'pending') RETURNING order_id;",
+        "INSERT INTO orders (order_time, employee_id, total, number_of_drinks, tax, kitchen_status) VALUES (CURRENT_TIMESTAMP, $4, $1, $2, $3, 'pending') RETURNING order_id;",
         [
             (totals.totalCents / 100).toFixed(2),
             totals.numberOfDrinks,
-            (totals.taxCents / 100).toFixed(2)
+            (totals.taxCents / 100).toFixed(2),
+            employeeId
         ]
     );
     return rows[0].order_id;
@@ -213,7 +214,7 @@ async function insertOrderItems(client, orderId, items, menuPrices, inventoryByI
     }
 }
 
-async function submitOrder(pool, rawItems) {
+async function submitOrder(pool, rawItems, employeeId = null) {
     const items = validateOrderItems(rawItems);
     const client = await pool.connect();
 
@@ -222,7 +223,7 @@ async function submitOrder(pool, rawItems) {
         const menuPrices = await loadMenuPrices(client, items);
         const { inventoryById, inventoryRequirements } = await loadAndLockInventory(client, items);
         const totals = calculateOrderTotals(items, menuPrices, inventoryById);
-        const orderId = await insertOrder(client, totals);
+        const orderId = await insertOrder(client, totals, employeeId);
         await insertOrderItems(client, orderId, items, menuPrices, inventoryById);
         await deductInventory(client, inventoryRequirements);
         await client.query('COMMIT');

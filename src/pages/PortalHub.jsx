@@ -1,4 +1,5 @@
 import React from 'react';
+import { StaffControls } from '../auth/StaffAuth';
 import { Link } from 'react-router-dom';
 import './pages.css';
 
@@ -6,6 +7,7 @@ export default function PortalHub() {
   return (
     <div className="hub-container">
       <h1>Bubble Tea POS System</h1>
+      <StaffControls />
       <p className="subtitle">Select a view:</p>
 
       <div className="button-grid">

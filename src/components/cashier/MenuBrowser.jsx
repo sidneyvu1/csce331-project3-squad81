@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
+import { translate as t, translateCategory } from '../kiosk/kioskText';
 
-export default function MenuBrowser({ menuItems, loading, error, disabled, onSelectItem }) {
+export default function MenuBrowser({ menuItems, loading, error, disabled, onSelectItem, language = 'en' }) {
   const [selectedCategory, setSelectedCategory] = useState('');
   const categories = useMemo(
     () => [...new Set(menuItems.map((item) => item.category))],
@@ -13,17 +14,17 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
 
   if (loading) {
     return (
-      <section className="cashier-menu" aria-label="Menu">
-        <MenuHeading />
-        <p className="menu-message" role="status">Loading menu…</p>
+      <section className="cashier-menu" aria-label={t(language, 'menu')}>
+        <MenuHeading language={language} />
+        <p className="menu-message" role="status">{t(language, 'loadingMenu')}</p>
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className="cashier-menu" aria-label="Menu">
-        <MenuHeading />
+      <section className="cashier-menu" aria-label={t(language, 'menu')}>
+        <MenuHeading language={language} />
         <p className="menu-message menu-error" role="alert">{error}</p>
       </section>
     );
@@ -31,18 +32,18 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
 
   if (menuItems.length === 0) {
     return (
-      <section className="cashier-menu" aria-label="Menu">
-        <MenuHeading />
-        <p className="menu-message">There are no menu items available.</p>
+      <section className="cashier-menu" aria-label={t(language, 'menu')}>
+        <MenuHeading language={language} />
+        <p className="menu-message">{t(language, 'noMenuItems')}</p>
       </section>
     );
   }
 
   return (
-    <section className="cashier-menu" aria-label="Menu">
-      <MenuHeading />
+    <section className="cashier-menu" aria-label={t(language, 'menu')}>
+      <MenuHeading language={language} />
       <div className="cashier-menu-layout">
-        <nav className="menu-categories" aria-label="Menu categories">
+        <nav className="menu-categories" aria-label={t(language, 'menuCategories')}>
           {categories.map((category) => (
             <button
               className={`menu-category${activeCategory === category ? ' is-selected' : ''}`}
@@ -52,13 +53,13 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
               onClick={() => setSelectedCategory(category)}
               aria-pressed={activeCategory === category}
             >
-              {category}
+              {translateCategory(language, category)}
             </button>
           ))}
         </nav>
 
         <div className="menu-items" aria-live="polite">
-          <h3>{activeCategory}</h3>
+          <h3>{translateCategory(language, activeCategory)}</h3>
           <div className="menu-item-grid">
             {visibleItems.map((item) => (
               <button
@@ -79,12 +80,12 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
   );
 }
 
-function MenuHeading() {
+function MenuHeading({ language }) {
   return (
     <div className="cashier-menu-heading">
       <div>
-        <h2>Menu</h2>
-        <p>Choose a category to browse available drinks.</p>
+        <h2>{t(language, 'menu')}</h2>
+        <p>{t(language, 'menuIntro')}</p>
       </div>
     </div>
   );

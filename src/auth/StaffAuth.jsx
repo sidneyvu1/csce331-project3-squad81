@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { translate as t } from '../components/kiosk/kioskText';
 
 const StaffContext = createContext(null);
 const domain = import.meta.env.VITE_AUTH0_DOMAIN;
@@ -52,7 +53,7 @@ function StaffSession({ children }) {
 
 export function useStaff() { return useContext(StaffContext); }
 
-export function StaffControls() {
+export function StaffControls({ language = 'en' } = {}) {
   const auth = useStaff();
   if (!auth.configured) return null;
   const name = auth.staff?.display_name;
@@ -62,7 +63,7 @@ export function StaffControls() {
       <span className="staff-name">{name}</span>
       <span className="staff-role">{auth.staff.role}</span>
     </span>}
-    {auth.authenticated && <button className="manager-small-button" onClick={auth.logout}>Log out</button>}
+    {auth.authenticated && <button className="manager-small-button" onClick={auth.logout}>{t(language, 'logOut')}</button>}
   </div>;
 }
 

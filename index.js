@@ -135,7 +135,8 @@ app.post('/api/assistant', async (req, res) => {
     try {
         const result = await runAssistant(pool, req.body?.messages, {
             apiKey: process.env.GEMINI_API_KEY,
-            model: process.env.GEMINI_MODEL || undefined
+            model: process.env.GEMINI_MODEL || undefined,
+            language: req.body?.language
         });
         res.json(result);
     } catch (error) {

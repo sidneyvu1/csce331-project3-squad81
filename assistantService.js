@@ -7,6 +7,7 @@ const MAX_MESSAGE_LENGTH = 500;
 const MAX_TOOL_ROUNDS = 4;
 const MAX_QUANTITY = 10;
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+const RESPONSE_LANGUAGES = { en: 'English', es: 'Spanish', zh: 'Simplified Chinese' };
 
 class AssistantRequestError extends Error {
     constructor(message, statusCode = 400) {
@@ -32,13 +33,15 @@ const addToCartDeclaration = {
     }
 };
 
-function buildSystemPrompt(menuItems, toppings) {
+function buildSystemPrompt(menuItems, toppings, language = 'en') {
     const menu = menuItems.map((item) => `- id ${item.menu_item_id}: ${item.name} (${item.category}) $${Number(item.price).toFixed(2)}`).join('\n');
     const toppingList = toppings.map((topping) => (
         `- id ${topping.inventory_id}: ${topping.name} +$${(topping.price_cents / 100).toFixed(2)}${topping.available ? '' : ' (OUT OF STOCK)'}`
     )).join('\n');
+    const responseLanguage = RESPONSE_LANGUAGES[language] || RESPONSE_LANGUAGES.en;
     return [
         'You are the friendly ordering assistant on a bubble tea shop self-service kiosk.',
+        `Respond to the customer in ${responseLanguage}. Keep official drink and topping names as listed.`,
         'You help customers learn about the menu, choose drinks, and add drinks to their cart.',
         'Only discuss this shop\'s menu and ordering. Politely decline anything else.',
         'Never invent drinks, toppings, prices or ingredients. If something is not listed below, say you do not have it.',
@@ -148,13 +151,13 @@ async function callGemini({ fetchImpl, apiKey, model, systemPrompt, contents }) 
     return response.json();
 }
 
-async function runAssistant(pool, messages, { apiKey, model = 'gemini-2.5-flash', fetchImpl = fetch } = {}) {
+async function runAssistant(pool, messages, { apiKey, model = 'gemini-2.5-flash', fetchImpl = fetch, language = 'en' } = {}) {
     if (!apiKey) throw new AssistantRequestError('The assistant is not configured.', 503);
     const contents = normalizeMessages(messages);
     const { menuItems, toppings } = await loadCatalog(pool);
     const menuById = new Map(menuItems.map((item) => [Number(item.menu_item_id), item]));
     const toppingById = new Map(toppings.map((topping) => [Number(topping.inventory_id), topping]));
-    const systemPrompt = buildSystemPrompt(menuItems, toppings);
+    const systemPrompt = buildSystemPrompt(menuItems, toppings, language);
     const cartItems = [];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {

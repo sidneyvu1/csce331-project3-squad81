@@ -1,4 +1,12 @@
 import React from 'react';
+import { translate as t } from '../kiosk/kioskText';
+
+function formatIceLevel(language, level) {
+  if (level === 'Regular') return t(language, 'regularIce');
+  if (level === 'Less') return t(language, 'lessIce');
+  if (level === 'No Ice') return t(language, 'noIce');
+  return level;
+}
 
 export default function CartPanel({
   cart,
@@ -12,21 +20,22 @@ export default function CartPanel({
   submitError,
   completedOrder,
   onSubmitOrder,
-  submitLabel = 'Submit Order'
+  submitLabel = 'Submit Order',
+  language = 'en'
 }) {
   function formatCurrency(cents) {
     return `$${(cents / 100).toFixed(2)}`;
   }
 
   return (
-    <aside className="cashier-cart" aria-label="Current order" aria-busy={submitting}>
+    <aside className="cashier-cart" aria-label={t(language, 'currentOrder')} aria-busy={submitting}>
       <header className="cashier-cart-header">
-        <h2>Current Order</h2>
-        <span>{drinkCount} {drinkCount === 1 ? 'drink' : 'drinks'}</span>
+        <h2>{t(language, 'currentOrder')}</h2>
+        <span>{drinkCount} {t(language, drinkCount === 1 ? 'drink' : 'drinks')}</span>
       </header>
 
       {cart.length === 0 ? (
-        <p className="cart-empty-message">Your order is empty. Select a drink to get started.</p>
+        <p className="cart-empty-message">{t(language, 'emptyOrder')}</p>
       ) : (
         <ul className="cart-items">
           {cart.map((item) => {
@@ -36,15 +45,15 @@ export default function CartPanel({
                 <div className="cart-item-heading">
                   <div>
                     <h3>{item.name}</h3>
-                    <p>{formatCurrency(Math.round(item.unit_price * 100))} each</p>
+                    <p>{formatCurrency(Math.round(item.unit_price * 100))} {t(language, 'each')}</p>
                   </div>
                   <button
                     className="cart-item-remove"
                     type="button"
                     disabled={submitting}
                     onClick={() => onRemoveItem(item.id)}
-                    aria-label={`Remove ${item.name} from order`}
-                    title="Remove item"
+                    aria-label={t(language, 'removeItem', { name: item.name })}
+                    title={t(language, 'removeTitle')}
                   >
                     <svg
                       aria-hidden="true"
@@ -56,22 +65,22 @@ export default function CartPanel({
                   </button>
                 </div>
                 <dl className="cart-item-details">
-                  <div><dt>Sugar</dt><dd>{item.sugar_level}</dd></div>
-                  <div><dt>Ice</dt><dd>{item.ice_level}</dd></div>
+                  <div><dt>{t(language, 'sugar')}</dt><dd>{item.sugar_level}</dd></div>
+                  <div><dt>{t(language, 'ice')}</dt><dd>{formatIceLevel(language, item.ice_level)}</dd></div>
                   {item.toppings.length > 0 && (
-                    <div><dt>Toppings</dt><dd>{item.toppings.map((topping) => `${topping.name}${Number.isInteger(topping.price_cents) ? ` (+$${(topping.price_cents / 100).toFixed(2)} each)` : ''}`).join(', ')}</dd></div>
+                    <div><dt>{t(language, 'toppings')}</dt><dd>{item.toppings.map((topping) => `${topping.name}${Number.isInteger(topping.price_cents) ? ` (+$${(topping.price_cents / 100).toFixed(2)} ${t(language, 'each')})` : ''}`).join(', ')}</dd></div>
                   )}
                   {item.notes && (
-                    <div><dt>Notes</dt><dd>{item.notes}</dd></div>
+                    <div><dt>{t(language, 'notes')}</dt><dd>{item.notes}</dd></div>
                   )}
                 </dl>
                 <div className="cart-item-footer">
-                  <div className="cart-quantity-control" aria-label={`Quantity of ${item.name}`}>
+                  <div className="cart-quantity-control" aria-label={t(language, 'quantityOf', { name: item.name })}>
                     <button
                       type="button"
                       onClick={() => onUpdateQuantity(item.id, -1)}
                       disabled={submitting || item.quantity <= 1}
-                      aria-label={`Decrease ${item.name} quantity`}
+                      aria-label={t(language, 'decreaseItem', { name: item.name })}
                     >
                       −
                     </button>
@@ -80,7 +89,7 @@ export default function CartPanel({
                       type="button"
                       disabled={submitting}
                       onClick={() => onUpdateQuantity(item.id, 1)}
-                      aria-label={`Increase ${item.name} quantity`}
+                      aria-label={t(language, 'increaseItem', { name: item.name })}
                     >
                       +
                     </button>
@@ -94,14 +103,14 @@ export default function CartPanel({
       )}
 
       <dl className="cart-totals">
-        <div><dt>Subtotal</dt><dd>{formatCurrency(subtotalCents)}</dd></div>
-        <div><dt>Tax (8.25%)</dt><dd>{formatCurrency(taxCents)}</dd></div>
-        <div className="cart-total"><dt>Total</dt><dd>{formatCurrency(totalCents)}</dd></div>
+        <div><dt>{t(language, 'subtotal')}</dt><dd>{formatCurrency(subtotalCents)}</dd></div>
+        <div><dt>{t(language, 'tax')}</dt><dd>{formatCurrency(taxCents)}</dd></div>
+        <div className="cart-total"><dt>{t(language, 'total')}</dt><dd>{formatCurrency(totalCents)}</dd></div>
       </dl>
       {submitError && <p className="order-submit-message menu-error" role="alert">{submitError}</p>}
       {completedOrder && (
         <p className="order-submit-message order-submit-success" role="status">
-          Order #{completedOrder.order_id} submitted successfully. Total: ${completedOrder.total}.
+          {t(language, 'submittedSuccess', { order: completedOrder.order_id, total: completedOrder.total })}
         </p>
       )}
       <button
@@ -110,7 +119,7 @@ export default function CartPanel({
         onClick={onSubmitOrder}
         disabled={cart.length === 0 || submitting}
       >
-        {submitting ? 'Submitting…' : submitLabel}
+        {submitting ? t(language, 'submitting') : submitLabel}
       </button>
     </aside>
   );

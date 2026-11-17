@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CartPanel from '../components/cashier/CartPanel';
 import DrinkCustomizationModal from '../components/cashier/DrinkCustomizationModal';
@@ -7,6 +7,8 @@ import KioskCheckout from '../components/kiosk/KioskCheckout';
 import KioskPayment from '../components/kiosk/KioskPayment';
 import KioskRedeem from '../components/kiosk/KioskRedeem';
 import AssistantChat from '../components/kiosk/AssistantChat';
+import { kioskLanguages, translate as t } from '../components/kiosk/kioskText';
+import { useLanguage } from '../components/kiosk/LanguageContext';
 import './pages.css';
 
 async function fetchToppings() {
@@ -24,6 +26,12 @@ async function fetchToppings() {
 }
 
 export default function CustomerKiosk() {
+  const {
+    language: selectedLanguage,
+    setLanguage: setSelectedLanguage,
+    setKioskWelcomeVisible
+  } = useLanguage();
+  const [hasStarted, setHasStarted] = useState(false);
   const nextCartItemId = useRef(1);
   const [cart, setCart] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -41,6 +49,11 @@ export default function CustomerKiosk() {
   const [rewardsInfo, setRewardsInfo] = useState(null);
   const [redeemReward, setRedeemReward] = useState(false);
   const [lookingUpRewards, setLookingUpRewards] = useState(false);
+
+  useLayoutEffect(() => {
+    setKioskWelcomeVisible(!hasStarted);
+    return () => setKioskWelcomeVisible(false);
+  }, [hasStarted, setKioskWelcomeVisible]);
 
   const cartDrinkCount = cart.reduce((total, item) => total + item.quantity, 0);
   const subtotalCents = cart.reduce(
@@ -234,13 +247,64 @@ export default function CustomerKiosk() {
     };
   }, []);
 
+  if (!hasStarted) {
+    return (
+      <main className="kiosk-welcome" lang={selectedLanguage === 'zh' ? 'zh-CN' : selectedLanguage}>
+        <section className="kiosk-welcome-panel" aria-label={t(selectedLanguage, 'startLabel')}>
+          <div className="kiosk-welcome-content">
+            <div className="kiosk-welcome-brand">{t(selectedLanguage, 'brand')}</div>
+            <h1>{t(selectedLanguage, 'chooseLanguage')}</h1>
+            <div className="kiosk-language-options" role="group" aria-label={t(selectedLanguage, 'language')}>
+              {kioskLanguages.map((language) => (
+                <button
+                  key={language.code}
+                  type="button"
+                  className={`kiosk-language-option${selectedLanguage === language.code ? ' is-selected' : ''}`}
+                  aria-pressed={selectedLanguage === language.code}
+                  onClick={() => setSelectedLanguage(language.code)}
+                >
+                  <span className="kiosk-language-flag" aria-hidden="true">{language.flag}</span>
+                  <span>{language.name}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="kiosk-start-button"
+              onClick={() => setHasStarted(true)}
+            >
+              <span>{t(selectedLanguage, 'beginOrder')}</span>
+              <span className="kiosk-start-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div className="kiosk-welcome-art" aria-hidden="true">
+            <svg viewBox="0 0 360 400" role="presentation">
+              <ellipse cx="184" cy="359" rx="122" ry="17" fill="#d9cdb8" opacity=".58" />
+              <path d="M92 123h184l-17 193a23 23 0 0 1-23 21h-104a23 23 0 0 1-23-21L92 123Z" fill="#fffaf0" stroke="#573d33" strokeWidth="7" strokeLinejoin="round" />
+              <path d="M100 178h168l-12 139a16 16 0 0 1-16 14h-103a16 16 0 0 1-16-14l-21-139Z" fill="#e9a164" />
+              <path d="M154 35l32 192" fill="none" stroke="#573d33" strokeWidth="12" strokeLinecap="round" />
+              <path d="M80 119h207" fill="none" stroke="#573d33" strokeWidth="9" strokeLinecap="round" />
+              <circle cx="133" cy="281" r="13" fill="#573d33" />
+              <circle cx="179" cy="296" r="13" fill="#573d33" />
+              <circle cx="222" cy="277" r="13" fill="#573d33" />
+              <circle cx="153" cy="326" r="12" fill="#573d33" />
+              <circle cx="204" cy="328" r="12" fill="#573d33" />
+              <circle cx="242" cy="309" r="11" fill="#573d33" />
+              <path d="M65 78c-13-15-10-33 2-43M284 79c15-15 13-34 2-45" fill="none" stroke="#c97855" strokeWidth="7" strokeLinecap="round" />
+            </svg>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <div className="page-container customer-page">
+    <div className="page-container customer-page" lang={selectedLanguage === 'zh' ? 'zh-CN' : selectedLanguage}>
       <header className="page-header">
-        <h1>Customer Screen</h1>
+        <h1>{t(selectedLanguage, 'customerScreen')}</h1>
         <div className="customer-header-actions">
-          <span className="cart-count" aria-live="polite">Cart: {cartDrinkCount}</span>
-          <Link to="/" className="home-button">Home</Link>
+          <span className="cart-count" aria-live="polite">{t(selectedLanguage, 'cartCount', { count: cartDrinkCount })}</span>
+          <Link to="/" className="home-button">{t(selectedLanguage, 'home')}</Link>
         </div>
       </header>
 
@@ -248,6 +312,7 @@ export default function CustomerKiosk() {
         {checkoutStep === 'payment' ? (
           <KioskPayment
             totalCents={totalCents}
+            language={selectedLanguage}
             submitting={submittingOrder}
             error={submitError}
             onPay={submitOrder}
@@ -259,6 +324,7 @@ export default function CustomerKiosk() {
             redeemPoints={rewardsInfo.redeem_points}
             freeItem={cheapestItem}
             discountCents={Math.round(cheapestItem.unit_price * 100)}
+            language={selectedLanguage}
             onRedeem={() => { setRedeemReward(true); setCheckoutStep('payment'); }}
             onSkip={() => { setRedeemReward(false); setCheckoutStep('payment'); }}
             onBack={() => { resetRewards(); setCheckoutStep('rewards'); }}
@@ -268,6 +334,7 @@ export default function CustomerKiosk() {
             step={checkoutStep}
             order={completedOrder}
             phone={rewardsPhone}
+            language={selectedLanguage}
             onPhoneChange={setRewardsPhone}
             totalCents={totalCents}
             submitting={submittingOrder || lookingUpRewards}
@@ -288,6 +355,7 @@ export default function CustomerKiosk() {
             menuItems={menuItems}
             loading={loading}
             error={error}
+            language={selectedLanguage}
             disabled={submittingOrder}
             onSelectItem={(item) => {
               setCompletedOrder(null);
@@ -305,18 +373,20 @@ export default function CustomerKiosk() {
             submitting={submittingOrder}
             submitError={submitError}
             completedOrder={completedOrder}
-            submitLabel="Continue to checkout"
+            submitLabel={t(selectedLanguage, 'continueCheckout')}
+            language={selectedLanguage}
             onSubmitOrder={() => setCheckoutStep('rewards')}
           />
         </div>
         )}
       </main>
 
-      {checkoutStep === 'menu' && <AssistantChat disabled={submittingOrder} onAddItems={addAssistantItems} />}
+      {checkoutStep === 'menu' && <AssistantChat language={selectedLanguage} disabled={submittingOrder} onAddItems={addAssistantItems} />}
 
       {selectedItem && (
         <DrinkCustomizationModal
           customerFacing
+          language={selectedLanguage}
           item={selectedItem}
           toppings={toppings}
           toppingsLoading={toppingsLoading}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { translate as t } from './kioskText';
 
 const money = (amount) => `$${Number(amount).toFixed(2)}`;
 
@@ -26,12 +27,12 @@ function passesLuhn(digits) {
   return sum % 10 === 0;
 }
 
-function validateCard({ name, number, expiry, cvc }) {
+function validateCard({ name, number, expiry, cvc }, language) {
   const errors = {};
   const digits = number.replace(/\D/g, '');
-  if (!name.trim()) errors.name = 'Enter the name on the card.';
+  if (!name.trim()) errors.name = t(language, 'validCardName');
   if (digits.length < 13 || digits.length > 19 || !passesLuhn(digits)) {
-    errors.number = 'Enter a valid card number.';
+    errors.number = t(language, 'validCardNumber');
   }
 
   const match = /^(\d{2})\/(\d{2})$/.exec(expiry);
@@ -40,14 +41,14 @@ function validateCard({ name, number, expiry, cvc }) {
   const now = new Date();
   const expired = year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1);
   if (!match || month < 1 || month > 12 || expired) {
-    errors.expiry = 'Enter a valid expiration date (MM/YY).';
+    errors.expiry = t(language, 'validExpiry');
   }
 
-  if (!/^\d{3,4}$/.test(cvc)) errors.cvc = 'Enter the 3 or 4 digit security code.';
+  if (!/^\d{3,4}$/.test(cvc)) errors.cvc = t(language, 'validSecurityCode');
   return errors;
 }
 
-export default function KioskPayment({ totalCents, submitting, error, onPay, onBack }) {
+export default function KioskPayment({ totalCents, submitting, error, onPay, onBack, language = 'en' }) {
   const heading = useRef(null);
   const [method, setMethod] = useState('card');
   const [card, setCard] = useState({ name: '', number: '', expiry: '', cvc: '' });
@@ -69,7 +70,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
 
     let payment = { method: free ? 'rewards' : 'counter' };
     if (!free && method === 'card') {
-      const found = validateCard(card);
+      const found = validateCard(card, language);
       if (Object.keys(found).length > 0) {
         setErrors(found);
         return;
@@ -96,32 +97,32 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
 
   return (
     <section className="kiosk-checkout" aria-labelledby="checkout-heading" aria-busy={busy}>
-      <h2 id="checkout-heading" ref={heading} tabIndex={-1}>Pay!</h2>
+      <h2 id="checkout-heading" ref={heading} tabIndex={-1}>{t(language, 'pay')}</h2>
 
       <form onSubmit={pay} noValidate>
         {free ? (
-          <p>Your rewards cover this whole order, so there is nothing to pay. Place your order to finish.</p>
+          <p>{t(language, 'rewardsCover')}</p>
         ) : (<>
         <fieldset className="kiosk-payment-methods" disabled={busy}>
-          <legend>Payment method</legend>
+          <legend>{t(language, 'paymentMethod')}</legend>
           <label className={method === 'card' ? 'kiosk-payment-option selected' : 'kiosk-payment-option'}>
             <input type="radio" name="payment-method" value="card" checked={method === 'card'} onChange={() => setMethod('card')} />
-            Credit or debit card
+            {t(language, 'card')}
           </label>
           <label className={method === 'counter' ? 'kiosk-payment-option selected' : 'kiosk-payment-option'}>
             <input type="radio" name="payment-method" value="counter" checked={method === 'counter'} onChange={() => setMethod('counter')} />
-            Pay at the counter
+            {t(language, 'counter')}
           </label>
         </fieldset>
 
         {method === 'card' ? (
           <>
-            <label htmlFor="card-name">Name on card</label>
+            <label htmlFor="card-name">{t(language, 'nameOnCard')}</label>
             <input id="card-name" type="text" autoComplete="cc-name" maxLength={60}
               value={card.name} onChange={(e) => updateCard('name', e.target.value)} {...fieldProps('name')} />
             {fieldError('name')}
 
-            <label htmlFor="card-number">Card number</label>
+            <label htmlFor="card-number">{t(language, 'cardNumber')}</label>
             <input id="card-number" type="text" inputMode="numeric" autoComplete="cc-number"
               placeholder="1234 5678 9012 3456" maxLength={23}
               value={card.number} onChange={(e) => updateCard('number', formatCardNumber(e.target.value))} {...fieldProps('number')} />
@@ -129,14 +130,14 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
 
             <div className="kiosk-payment-row">
               <div>
-                <label htmlFor="card-expiry">Expires</label>
+                <label htmlFor="card-expiry">{t(language, 'expires')}</label>
                 <input id="card-expiry" type="text" inputMode="numeric" autoComplete="cc-exp"
                   placeholder="MM/YY" maxLength={5}
                   value={card.expiry} onChange={(e) => updateCard('expiry', formatExpiry(e.target.value))} {...fieldProps('expiry')} />
                 {fieldError('expiry')}
               </div>
               <div>
-                <label htmlFor="card-cvc">Security code</label>
+                <label htmlFor="card-cvc">{t(language, 'securityCode')}</label>
                 <input id="card-cvc" type="password" inputMode="numeric" autoComplete="cc-csc"
                   placeholder="CVC" maxLength={4}
                   value={card.cvc} onChange={(e) => updateCard('cvc', e.target.value.replace(/\D/g, ''))} {...fieldProps('cvc')} />
@@ -145,17 +146,17 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
             </div>
           </>
         ) : (
-          <p>Place your order now and pay the cashier when you pick up your drinks.</p>
+          <p>{t(language, 'payAtCounterInfo')}</p>
         )}
         </>)}
 
-        <div className="kiosk-checkout-total"><span>Order total</span><strong>{money(totalCents / 100)}</strong></div>
+        <div className="kiosk-checkout-total"><span>{t(language, 'orderTotal')}</span><strong>{money(totalCents / 100)}</strong></div>
         {error && <p className="menu-error" role="alert">{error}</p>}
         <div className="kiosk-checkout-actions">
           <button type="submit" className="submit-order-button" disabled={busy}>
-            {processing ? 'Processing payment…' : submitting ? 'Placing order…' : !free && method === 'card' ? `Pay ${money(totalCents / 100)}` : 'Place order'}
+            {processing ? t(language, 'processingPayment') : submitting ? t(language, 'placingOrder') : !free && method === 'card' ? `${t(language, 'pay')} ${money(totalCents / 100)}` : t(language, 'placeOrder')}
           </button>
-          <button type="button" className="kiosk-back-button" disabled={busy} onClick={onBack}>Back to rewards</button>
+          <button type="button" className="kiosk-back-button" disabled={busy} onClick={onBack}>{t(language, 'backToRewards')}</button>
         </div>
       </form>
     </section>

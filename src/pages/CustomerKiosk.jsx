@@ -9,6 +9,7 @@ import KioskRedeem from '../components/kiosk/KioskRedeem';
 import AssistantChat from '../components/kiosk/AssistantChat';
 import { kioskLanguages, translate as t } from '../components/kiosk/kioskText';
 import { useLanguage } from '../components/kiosk/LanguageContext';
+import KioskWeather from '../components/kiosk/KioskWeather';
 import './pages.css';
 
 async function fetchToppings() {
@@ -276,6 +277,7 @@ export default function CustomerKiosk() {
               <span>{t(selectedLanguage, 'beginOrder')}</span>
               <span className="kiosk-start-arrow" aria-hidden="true">→</span>
             </button>
+            <KioskWeather />
           </div>
           <div className="kiosk-welcome-art" aria-hidden="true">
             <svg viewBox="0 0 360 400" role="presentation">

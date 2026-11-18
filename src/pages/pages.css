@@ -200,6 +200,37 @@
   .kiosk-checkout { box-sizing: border-box; padding: 24px; }
 }
 
+/* Kiosk Weather */
+.kiosk-weather {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 20px;
+  padding: 16px 18px;
+  border: 1px solid #e4e1e4;
+  border-radius: 10px;
+  background: #89CFF0;
+  color: #ebe71b;
+}
+
+.kiosk-weather h2 {
+  color: #333;
+  font: inherit;
+  font-size: clamp(16px, 1.5vw, 16px);
+  font-weight: 650; }
+.kiosk-weather p {margin: 10px 0;}
+.kiosk-weather-temperature {font: inherit; font-weight: 600; font-size: 16px; text-transform: capitalize; }
+.kiosk-weather-temperature strong {font-size: 24px;}
+.kiosk-weather-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px; 
+  margin-top: 8px; 
+  color: #333;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 475;
+}
+
 /* Hub Page */
 .hub-container {
   display: flex;

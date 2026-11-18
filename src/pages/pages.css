@@ -1,18 +1,18 @@
   :root {
-    --color-canvas: #f5eae7;
+    --color-canvas: #faedea;
     --color-surface: #fffdf8;
-    --color-surface-soft: #f7f1e7;
-    --color-surface-hover: #f1e4d3;
-    --color-ink: #35251f;
-    --color-muted: #806654;
+    --color-surface-soft: #fff7f7;
+    --color-surface-hover: #ffd4d4;
+    --color-ink: #462d24;
+    --color-muted: #6f3333;
     --color-border: #edc9c5;
-    --color-border-strong: #d9cdb8;
-    --color-disabled: #c9bbaa;
-    --color-primary: #573d33;
+    --color-border-strong: #62423c;
+    --color-disabled: #c1a9a8;
+    --color-primary: #573333;
     --color-primary-hover: #3f2a22;
     --color-accent: #722929;
     --color-accent-hover: #9f3838;
-    --color-focus: #e0bd9a;
+    --color-focus: #f0dac4;
   }
   
   /* Customer kiosk checkout */
@@ -151,7 +151,7 @@
     aspect-ratio: 1;
     margin: 0 auto;
     border-radius: 50%;
-    background: radial-gradient(circle at 34% 30%, #fff8e9 0 18%, #f5ddbd 18.5% 58%, #edc99f 58.5% 100%);
+    background: radial-gradient(circle at 34% 30%, #fff8e9 0 18%, #f5c7bd 18.5% 58%, #fcbfbf 58.5% 100%);
     place-items: center;
   }
   .kiosk-welcome-art svg { display: block; width: 84%; height: auto; overflow: visible; }
@@ -201,10 +201,10 @@
     width: 100%;
     margin-top: 20px;
     padding: 16px 18px;
-    border: 1px solid #e4e1e4;
+    border: 1px solid #89CFF0;
     border-radius: 10px;
     background: #89CFF0;
-    color: #dfb243;
+    color: #ffe39c;
   }
   
   .kiosk-weather h2 {

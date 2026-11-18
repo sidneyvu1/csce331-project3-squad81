@@ -127,6 +127,41 @@ app.get('/api/toppings', async (req, res) => {
     }
 });
 
+// weather 
+app.get('/api/weather', async (req, res) => {
+    const city = 'College Station' ;
+    const apiKey = process.env.WEATHER_API_KEY;
+    const query = new URLSearchParams({
+        q: city,
+        appid: apiKey,
+        units: 'imperial'
+    });
+
+  try {
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?${query}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }             
+    
+    const weatherData = await response.json();
+    
+    return res.status(200).json({
+        weather:{
+            city: weatherData.name,
+            temperature: weatherData.main.temp,
+            feels_like: weatherData.main.feels_like,
+            description: weatherData.weather?.[0]?.description ?? 'Unavailable',
+            icon: weatherData.weather?.[0]?.icon ?? null,
+            humidity: weatherData.main.humidity
+        }
+    });
+    
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+  }
+});
+
 const allowAssistantRequest = createRateLimiter({ limit: 20, windowMs: 60_000 });
 app.post('/api/assistant', async (req, res) => {
     if (!allowAssistantRequest(req.ip)) {

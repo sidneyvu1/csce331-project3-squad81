@@ -8,7 +8,7 @@ const text = {
   en: {
     chooseLanguage: 'Choose language',
     beginOrder: 'BEGIN ORDER',
-    brand: 'Bubble tea',
+    brand: '',
     language: 'Language',
     changeLanguage: 'Change language',
     startLabel: 'Start your order',

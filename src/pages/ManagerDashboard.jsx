@@ -138,14 +138,14 @@ export default function ManagerDashboard() {
                 <label className="inventory-filter"><input type="checkbox" checked={lowOnly} onChange={(event) => setLowOnly(event.target.checked)} /> Low stock only</label>
                 <button type="button" className="manager-small-button" disabled={loading} onClick={loadInventory}>Refresh</button>
               </div>
-              <p className="inventory-help">Reorder level is the configured stock threshold, not a target quantity. Critical means zero stock or at most half the reorder level.</p>
+              
               {notice && <p role="status" className="order-submit-success">{notice}</p>}
               {loading ? <p role="status">Loading inventory…</p> : error ? null : visible.length ? <InventoryTable items={visible} onUpdate={updateQuantity} /> : <p className="menu-message">{inventory.length ? 'No items match your filters.' : 'No inventory items available.'}</p>}
             </section>
             <aside className="cashier-cart manager-insights" aria-labelledby="insights-title">
               <header className="cashier-cart-header"><h2 id="insights-title">Inventory Insights</h2></header>
-              <section><h3>Weekly Activity</h3><p>Weekly trends are unavailable until inventory history is connected.</p></section>
-              <section><h3>Today</h3><p>Daily trends are unavailable until inventory history is connected.</p></section>
+              <section><h3>Weekly Activity</h3><p>Weekly trends are unavailable, since no weekly history exists yet.</p></section>
+              <section><h3>Today</h3><p>Daily trends are unavailable until inventory history is updated.</p></section>
               <section><h3>Restock Recommendations</h3>
                 {loading ? <p>Loading recommendations…</p> : error ? <p>Inventory is unavailable.</p> : restock.length ? <ul className="inventory-restock">{restock.map((item) => <li key={item.inventory_id}><strong>{item.item_name}</strong><span>{item.quantity_on_hand} {item.unit} remaining · {inventoryStatus(item)}</span></li>)}</ul> : <p>All configured stock levels are above their reorder thresholds.</p>}
               </section>

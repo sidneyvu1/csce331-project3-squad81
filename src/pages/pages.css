@@ -775,7 +775,10 @@
   }
   
   .menu-item-card {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     width: 100%;
     min-height: 92px;
     padding: 18px;
@@ -797,6 +800,16 @@
     margin: 0 0 12px;
     color: var(--color-ink);
     font-size: 16px;
+  }
+
+  .menu-item-details {
+    min-width: 0;
+  }
+
+  .menu-item-icon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 44px;
   }
   
   .menu-item-card p {

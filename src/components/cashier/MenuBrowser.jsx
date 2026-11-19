@@ -70,8 +70,11 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
                 disabled={disabled}
                 onClick={() => onSelectItem(item)}
               >
-                <h4>{item.name}</h4>
-                <p>${Number(item.price).toFixed(2)}</p>
+                <div className="menu-item-details">
+                  <h4>{item.name}</h4>
+                  <p>${Number(item.price).toFixed(2)}</p>
+                </div>
+                <DrinkIcon name={item.name} id={item.menu_item_id} />
               </button>
             ))}
           </div>
@@ -81,17 +84,78 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
   );
 }
 
-function CategoryIcon({ category }) {
+function getCategoryIconType(category) {
   const normalizedCategory = category.toLowerCase().replace(/[^a-z]/g, '');
-  let icon = 'tea';
 
-  if (normalizedCategory.includes('fresh')) icon = 'coffee';
-  else if (normalizedCategory.includes('fruit')) icon = 'fruit';
-  else if (normalizedCategory.includes('ice')) icon = 'ice';
-  else if (normalizedCategory.includes('milk')) icon = 'milk';
-  else if (normalizedCategory.includes('matcha')) icon = 'leaf';
-  else if (normalizedCategory.includes('caffeine')) icon = 'leaf';
-  else if (normalizedCategory.includes('seasonal')) icon = 'sparkle';
+  if (normalizedCategory.includes('fresh')) return 'coffee';
+  if (normalizedCategory.includes('fruit')) return 'fruit';
+  if (normalizedCategory.includes('ice')) return 'ice';
+  if (normalizedCategory.includes('milk')) return 'milk';
+  if (normalizedCategory.includes('matcha')) return 'leaf';
+  if (normalizedCategory.includes('caffeine')) return 'leaf';
+  if (normalizedCategory.includes('seasonal')) return 'sparkle';
+  return 'tea';
+}
+
+function getDrinkColor(name) {
+  const normalizedName = name.toLowerCase();
+
+  if (normalizedName.includes('strawberry')) return '#df7374';
+  if (normalizedName.includes('mango')) return '#e8a43c';
+  if (normalizedName.includes('peach')) return '#e99582';
+  if (normalizedName.includes('lychee')) return '#d9a8c9';
+  if (normalizedName.includes('watermelon')) return '#72a96c';
+  if (normalizedName.includes('blueberry')) return '#7786c0';
+  if (normalizedName.includes('grapefruit')) return '#e87943';
+  if (normalizedName.includes('grape') || normalizedName.includes('taro')) return '#9875b5';
+  if (normalizedName.includes('passion') || normalizedName.includes('lemon')) return '#d8b63e';
+  if (normalizedName.includes('matcha') || normalizedName.includes('green tea')) return '#789b59';
+  if (normalizedName.includes('thai')) return '#e58a32';
+  if (normalizedName.includes('brown sugar') || normalizedName.includes('coffee')) return '#ad7047';
+  if (normalizedName.includes('chocolate')) return '#7c5044';
+  if (normalizedName.includes('honeydew')) return '#8cae62';
+  if (normalizedName.includes('milk tea') || normalizedName.includes('oolong') || normalizedName.includes('black tea')) return '#c69664';
+  return '#c97855';
+}
+
+function DrinkIcon({ name, id }) {
+  const normalizedName = name.toLowerCase();
+  const hasStrawberryMatchaGradient =
+    normalizedName.includes('strawberry') && normalizedName.includes('matcha');
+  const color = getDrinkColor(name);
+  const gradientId = `drink-gradient-${id}`;
+
+  return (
+    <svg
+      className="menu-item-icon"
+      viewBox="0 0 36 44"
+      style={{ color }}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {hasStrawberryMatchaGradient && (
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#789b59" />
+            <stop offset="40%" stopColor="#789b59" />
+            <stop offset="60%" stopColor="#df7374" />
+            <stop offset="100%" stopColor="#df7374" />
+          </linearGradient>
+        </defs>
+      )}
+      <path d="m19 3 3 11" fill="none" stroke="#573d33" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M7 13h23l-2 27H9L7 13Z" fill="#fffaf0" stroke="#573d33" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M8.5 18h20L27 38H10L8.5 18Z" fill={hasStrawberryMatchaGradient ? `url(#${gradientId})` : color} opacity=".85" />
+      <path d="M8 17h21" fill="none" stroke="#573d33" strokeWidth="1.5" />
+      <circle cx="14" cy="32" r="1.8" fill="#573d33" />
+      <circle cx="19" cy="35" r="1.8" fill="#573d33" />
+      <circle cx="24" cy="31" r="1.8" fill="#573d33" />
+    </svg>
+  );
+}
+
+function CategoryIcon({ category }) {
+  const icon = getCategoryIconType(category);
 
   return (
     <svg className="menu-category-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

@@ -310,7 +310,7 @@ export default function CustomerKiosk() {
         </div>
       </header>
 
-      <main className="page-content customer-page-content">
+      <main className={`page-content customer-page-content${checkoutStep !== 'menu' ? ' is-checkout-step' : ''}`}>
         {checkoutStep === 'payment' ? (
           <KioskPayment
             totalCents={totalCents}

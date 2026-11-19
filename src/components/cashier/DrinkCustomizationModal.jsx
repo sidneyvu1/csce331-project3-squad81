@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { translate as t } from '../kiosk/kioskText';
+import DrinkIllustration from '../kiosk/DrinkIllustration';
 
 export default function DrinkCustomizationModal({
   item,
@@ -19,6 +20,9 @@ export default function DrinkCustomizationModal({
 
   const toppingTotalCents = selectedToppings.reduce((total, id) => total + (toppings.find((topping) => topping.inventory_id === id)?.price_cents ?? 0), 0);
   const unitPriceCents = Math.round(Number(item.price) * 100) + toppingTotalCents;
+  const selectedToppingItems = selectedToppings
+    .map((id) => toppings.find((topping) => topping.inventory_id === id))
+    .filter(Boolean);
 
   useEffect(() => {
     function closeOnEscape(event) {
@@ -76,120 +80,132 @@ export default function DrinkCustomizationModal({
             ×
           </button>
         </header>
-        <fieldset className="drink-adjustment-control">
-          <legend>{t(language, 'sugarLevel')}</legend>
-          <div className="sugar-level-options">
-            {['100%', '70%', '50%', '30%', '0%'].map((level) => (
-              <label
-                className={`drink-adjustment-option${sugarLevel === level ? ' is-selected' : ''}`}
-                key={level}
-              >
-                <input
-                  type="radio"
-                  name="sugar-level"
-                  value={level}
-                  checked={sugarLevel === level}
-                  onChange={() => setSugarLevel(level)}
-                />
-                <span>{level}</span>
-              </label>
-            ))}
+        {customerFacing && (
+          <div className="drink-customization-preview">
+            <DrinkIllustration
+              className="drink-customization-preview-cup"
+              name={item.name}
+              iceLevel={iceLevel}
+              toppings={selectedToppingItems}
+            />
           </div>
-        </fieldset>
-        <fieldset className="ice-level-control">
-          <legend>{t(language, 'iceLevel')}</legend>
-          <div className="ice-level-options">
-            {['Regular', 'Less', 'No Ice'].map((level) => (
-              <label
-                className={`drink-adjustment-option${iceLevel === level ? ' is-selected' : ''}`}
-                key={level}
-              >
-                <input
-                  type="radio"
-                  name="ice-level"
-                  value={level}
-                  checked={iceLevel === level}
-                  onChange={() => setIceLevel(level)}
-                />
-                <span>{level === 'Regular' ? t(language, 'regularIce') : level === 'Less' ? t(language, 'lessIce') : t(language, 'noIce')}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset className="drink-adjustment-control topping-control">
-          <legend>{t(language, 'toppings')}</legend>
-          <p className="topping-message" style={{ marginBottom: 12 }}>{t(language, 'optionalToppings')}</p>
-          {toppingsLoading ? (
-            <p className="topping-message" role="status">{t(language, 'loadingToppings')}</p>
-          ) : toppingsError ? (
-            <p className="topping-message menu-error" role="alert">{toppingsError}</p>
-          ) : toppings.length === 0 ? (
-            <p className="topping-message">{t(language, 'noToppings')}</p>
-          ) : (
-            <div className="topping-options">
-              {toppings.map((topping) => {
-                const outOfStock = Number(topping.quantity_on_hand) <= 0;
-                const priceUnavailable = !Number.isInteger(topping.price_cents);
-                return (
-                  <label
-                    className={`topping-option${selectedToppings.includes(topping.inventory_id) ? ' is-selected' : ''}${outOfStock ? ' is-out-of-stock' : ''}`}
-                    key={topping.inventory_id}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedToppings.includes(topping.inventory_id)}
-                      disabled={outOfStock || priceUnavailable}
-                      onChange={() => toggleTopping(topping.inventory_id)}
-                    />
-                    <span>{topping.name}{!priceUnavailable && ` (+$${(topping.price_cents / 100).toFixed(2)})`}</span>
-                    <span className="topping-stock">
-                      {priceUnavailable ? t(language, 'unavailable') : customerFacing
-                        ? (outOfStock ? t(language, 'soldOut') : t(language, 'available'))
-                        : (outOfStock ? t(language, 'outOfStock') : `${topping.quantity_on_hand} ${t(language, 'available').toLowerCase()}`)}
-                    </span>
-                  </label>
-                );
-              })}
+        )}
+        <div className="drink-customization-options">
+          <fieldset className="drink-adjustment-control">
+            <legend>{t(language, 'sugarLevel')}</legend>
+            <div className="sugar-level-options">
+              {['100%', '70%', '50%', '30%', '0%'].map((level) => (
+                <label
+                  className={`drink-adjustment-option${sugarLevel === level ? ' is-selected' : ''}`}
+                  key={level}
+                >
+                  <input
+                    type="radio"
+                    name="sugar-level"
+                    value={level}
+                    checked={sugarLevel === level}
+                    onChange={() => setSugarLevel(level)}
+                  />
+                  <span>{level}</span>
+                </label>
+              ))}
             </div>
-          )}
-        </fieldset>
-        <div className="drink-notes">
-          <label htmlFor="drink-notes">{t(language, 'specialRequests')}</label>
-          <textarea
-            id="drink-notes"
-            name="drink-notes"
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder={t(language, 'addRequests')}
-            rows={3}
-          />
-        </div>
-        <div className="cart-add-controls">
-          <div className="quantity-control" aria-label={t(language, 'drinkQuantity')}>
-            <button
-              type="button"
-              onClick={() => setQuantity((current) => Math.max(1, current - 1))}
-              disabled={quantity <= 1}
-              aria-label={t(language, 'decreaseQuantity')}
-            >
-              −
-            </button>
-            <output aria-live="polite">{quantity}</output>
-            <button
-              type="button"
-              onClick={() => setQuantity((current) => current + 1)}
-              aria-label={t(language, 'increaseQuantity')}
-            >
-              +
+          </fieldset>
+          <fieldset className="ice-level-control">
+            <legend>{t(language, 'iceLevel')}</legend>
+            <div className="ice-level-options">
+              {['Regular', 'Less', 'No Ice'].map((level) => (
+                <label
+                  className={`drink-adjustment-option${iceLevel === level ? ' is-selected' : ''}`}
+                  key={level}
+                >
+                  <input
+                    type="radio"
+                    name="ice-level"
+                    value={level}
+                    checked={iceLevel === level}
+                    onChange={() => setIceLevel(level)}
+                  />
+                  <span>{level === 'Regular' ? t(language, 'regularIce') : level === 'Less' ? t(language, 'lessIce') : t(language, 'noIce')}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset className="drink-adjustment-control topping-control">
+            <legend>{t(language, 'toppings')}</legend>
+            <p className="topping-message" style={{ marginBottom: 12 }}>{t(language, 'optionalToppings')}</p>
+            {toppingsLoading ? (
+              <p className="topping-message" role="status">{t(language, 'loadingToppings')}</p>
+            ) : toppingsError ? (
+              <p className="topping-message menu-error" role="alert">{toppingsError}</p>
+            ) : toppings.length === 0 ? (
+              <p className="topping-message">{t(language, 'noToppings')}</p>
+            ) : (
+              <div className="topping-options">
+                {toppings.map((topping) => {
+                  const outOfStock = Number(topping.quantity_on_hand) <= 0;
+                  const priceUnavailable = !Number.isInteger(topping.price_cents);
+                  return (
+                    <label
+                      className={`topping-option${selectedToppings.includes(topping.inventory_id) ? ' is-selected' : ''}${outOfStock ? ' is-out-of-stock' : ''}`}
+                      key={topping.inventory_id}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedToppings.includes(topping.inventory_id)}
+                        disabled={outOfStock || priceUnavailable}
+                        onChange={() => toggleTopping(topping.inventory_id)}
+                      />
+                      <span>{topping.name}{!priceUnavailable && ` (+$${(topping.price_cents / 100).toFixed(2)})`}</span>
+                      <span className="topping-stock">
+                        {priceUnavailable ? t(language, 'unavailable') : customerFacing
+                          ? (outOfStock ? t(language, 'soldOut') : t(language, 'available'))
+                          : (outOfStock ? t(language, 'outOfStock') : `${topping.quantity_on_hand} ${t(language, 'available').toLowerCase()}`)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </fieldset>
+          <div className="drink-notes">
+            <label htmlFor="drink-notes">{t(language, 'specialRequests')}</label>
+            <textarea
+              id="drink-notes"
+              name="drink-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder={t(language, 'addRequests')}
+              rows={3}
+            />
+          </div>
+          <div className="cart-add-controls">
+            <div className="quantity-control" aria-label={t(language, 'drinkQuantity')}>
+              <button
+                type="button"
+                onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+                disabled={quantity <= 1}
+                aria-label={t(language, 'decreaseQuantity')}
+              >
+                −
+              </button>
+              <output aria-live="polite">{quantity}</output>
+              <button
+                type="button"
+                onClick={() => setQuantity((current) => current + 1)}
+                aria-label={t(language, 'increaseQuantity')}
+              >
+                +
+              </button>
+            </div>
+            <button className="add-to-cart-button" type="button" onClick={addToCart}>
+              {t(language, 'addToCart')} · ${(unitPriceCents * quantity / 100).toFixed(2)}
             </button>
           </div>
-          <button className="add-to-cart-button" type="button" onClick={addToCart}>
-            {t(language, 'addToCart')} · ${(unitPriceCents * quantity / 100).toFixed(2)}
-          </button>
+          <p className="topping-message" style={{ marginTop: 12 }} aria-live="polite">
+            {quantity} {t(language, quantity === 1 ? 'drink' : 'drinks')} · ${(unitPriceCents * quantity / 100).toFixed(2)} {t(language, 'beforeTax')}. {t(language, 'selectedToppings')}: +${(toppingTotalCents / 100).toFixed(2)} {t(language, 'perDrink')}.
+          </p>
         </div>
-        <p className="topping-message" style={{ marginTop: 12 }} aria-live="polite">
-          {quantity} {t(language, quantity === 1 ? 'drink' : 'drinks')} · ${(unitPriceCents * quantity / 100).toFixed(2)} {t(language, 'beforeTax')}. {t(language, 'selectedToppings')}: +${(toppingTotalCents / 100).toFixed(2)} {t(language, 'perDrink')}.
-        </p>
       </section>
     </div>
   );

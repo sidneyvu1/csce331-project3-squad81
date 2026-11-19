@@ -12,6 +12,49 @@ export default function LanguageSwitcher() {
   const selectedLanguage = kioskLanguages.find((option) => option.code === language) || kioskLanguages[0];
 
   useEffect(() => {
+    let googleSelect;
+    let retryTimer;
+
+    function syncLanguage(event) {
+      setLanguage(event.target.value === 'zh-CN' ? 'zh' : event.target.value);
+    }
+
+    function initializeGoogleTranslate() {
+      if (!containerRef.current || !window.google?.translate) return;
+      if (containerRef.current.childElementCount) {
+        window.clearInterval(retryTimer);
+        return;
+      }
+
+      new window.google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,es,zh-CN',
+        autoDisplay: false
+      }, 'google_translate_element');
+      googleSelect = containerRef.current.querySelector('.goog-te-combo');
+      googleSelect?.addEventListener('change', syncLanguage);
+      window.dispatchEvent(new Event('google-translate-ready'));
+    }
+
+    window.googleTranslateElementInit = initializeGoogleTranslate;
+    initializeGoogleTranslate();
+    if (!document.querySelector('script[data-google-translate]')) {
+      const script = document.createElement('script');
+      script.dataset.googleTranslate = 'true';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.body.appendChild(script);
+    } else {
+      retryTimer = window.setInterval(initializeGoogleTranslate, 100);
+    }
+
+    return () => {
+      window.clearInterval(retryTimer);
+      googleSelect?.removeEventListener('change', syncLanguage);
+    };
+  }, [setLanguage]);
+
+  useEffect(() => {
     if (!open) return undefined;
 
     function dismiss(event) {
@@ -20,7 +63,7 @@ export default function LanguageSwitcher() {
         event.stopPropagation();
         setOpen(false);
         triggerRef.current?.focus();
-      } else if (event.type === 'pointerdown' && !containerRef.current?.contains(event.target)) {
+      } else if (event.type === 'pointerdown' && !triggerRef.current?.parentElement?.contains(event.target)) {
         setOpen(false);
       }
     }
@@ -39,10 +82,10 @@ export default function LanguageSwitcher() {
     triggerRef.current?.focus();
   }
 
-  if (location.pathname.replace(/\/+$/, '') === '/kiosk' && kioskWelcomeVisible) return null;
+  const hidden = location.pathname.replace(/\/+$/, '') === '/kiosk' && kioskWelcomeVisible;
 
   return (
-    <div className="global-language-switcher" ref={containerRef} lang={language === 'zh' ? 'zh-CN' : language}>
+    <div className={`global-language-switcher${hidden ? ' is-hidden' : ''}`} lang={language === 'zh' ? 'zh-CN' : language}>
       <button
         ref={triggerRef}
         className="global-language-trigger"
@@ -58,12 +101,7 @@ export default function LanguageSwitcher() {
         </svg>
       </button>
       {open && (
-        <div
-          className="global-language-options"
-          id="global-language-options"
-          role="group"
-          aria-label={t(language, 'language')}
-        >
+        <div className="global-language-options" role="group" aria-label={t(language, 'language')}>
           {kioskLanguages.map((option) => (
             <button
               key={option.code}
@@ -79,6 +117,7 @@ export default function LanguageSwitcher() {
           ))}
         </div>
       )}
+      <div id="google_translate_element" ref={containerRef} className="google-translate-engine" aria-hidden="true" />
     </div>
   );
 }

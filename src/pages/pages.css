@@ -223,7 +223,7 @@
   }
   .kiosk-welcome-art svg { display: block; width: 84%; height: auto; overflow: visible; }
   .customer-header-actions { display: flex; align-items: center; gap: 16px; }
-  .customer-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 20px; max-width: 1600px; margin: 0 auto; }
+  .customer-workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 20px; width: 100%; max-width: 1600px; min-height: 0; margin: 0 auto; }
   .kiosk-checkout { width: 100%; max-width: 640px; margin: 12px auto; padding: 36px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); color: var(--color-ink); }
   .kiosk-checkout h2 { margin: 8px 0 16px; font-size: 30px; }
   .kiosk-checkout > p { line-height: 1.6; }
@@ -414,6 +414,12 @@
     min-height: 0;
     overflow: hidden;
   }
+
+  .customer-page {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
   
   .cashier-page-content {
     display: flex;
@@ -421,6 +427,12 @@
     overflow: hidden;
   }
   
+  .customer-page-content {
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .cashier-workspace {
     display: grid;
     flex: 1;
@@ -703,6 +715,9 @@
   }
   
   .menu-category {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     padding: 14px 16px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
@@ -713,6 +728,18 @@
     text-align: left;
   }
   
+  .menu-category-icon {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--color-primary);
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+  }
+
   .menu-category:hover,
   .menu-category.is-selected {
     border-color: var(--color-primary);
@@ -1039,6 +1066,17 @@
       overflow: visible;
     }
   
+    .customer-page {
+      height: auto;
+      min-height: 100vh;
+      overflow: auto;
+    }
+
+    .customer-page-content {
+      display: block;
+      overflow: visible;
+    }
+
     .cashier-workspace {
       grid-template-columns: 1fr;
     }

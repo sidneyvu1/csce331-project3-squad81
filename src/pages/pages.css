@@ -14,6 +14,12 @@
     --color-accent-hover: #9f3838;
     --color-focus: #f0dac4;
   }
+
+  .goog-te-banner-frame,
+  .skiptranslate > iframe {
+    display: none !important;
+  }
+  body { top: 0 !important; }
   
   /* Customer kiosk checkout */
   .kiosk-welcome {

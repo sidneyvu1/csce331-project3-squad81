@@ -12,28 +12,29 @@ export default function LanguageSwitcher() {
   const selectedLanguage = kioskLanguages.find((option) => option.code === language) || kioskLanguages[0];
 
   useEffect(() => {
-    let googleSelect;
     let retryTimer;
+    let initialized = false;
 
-    function syncLanguage(event) {
-      setLanguage(event.target.value === 'zh-CN' ? 'zh' : event.target.value);
+    function syncGoogleTranslate() {
+      document.cookie = `googtrans=/en/${language === 'zh' ? 'zh-CN' : language};path=/`;
+      const googleSelect = containerRef.current?.querySelector('.goog-te-combo');
+      if (googleSelect && googleSelect.value !== (language === 'zh' ? 'zh-CN' : language)) {
+        googleSelect.value = language === 'zh' ? 'zh-CN' : language;
+        googleSelect.dispatchEvent(new Event('change'));
+      }
     }
 
     function initializeGoogleTranslate() {
       if (!containerRef.current || !window.google?.translate) return;
-      if (containerRef.current.childElementCount) {
-        window.clearInterval(retryTimer);
-        return;
+      if (!initialized) {
+        initialized = true;
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'en',
+          includedLanguages: 'en,es,zh-CN',
+          autoDisplay: false
+        }, 'google_translate_element');
       }
-
-      new window.google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'en,es,zh-CN',
-        autoDisplay: false
-      }, 'google_translate_element');
-      googleSelect = containerRef.current.querySelector('.goog-te-combo');
-      googleSelect?.addEventListener('change', syncLanguage);
-      window.dispatchEvent(new Event('google-translate-ready'));
+      syncGoogleTranslate();
     }
 
     window.googleTranslateElementInit = initializeGoogleTranslate;
@@ -44,15 +45,13 @@ export default function LanguageSwitcher() {
       script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
       document.body.appendChild(script);
-    } else {
-      retryTimer = window.setInterval(initializeGoogleTranslate, 100);
     }
+    retryTimer = window.setInterval(initializeGoogleTranslate, 250);
 
     return () => {
       window.clearInterval(retryTimer);
-      googleSelect?.removeEventListener('change', syncLanguage);
     };
-  }, [setLanguage]);
+  }, [language]);
 
   useEffect(() => {
     if (!open) return undefined;

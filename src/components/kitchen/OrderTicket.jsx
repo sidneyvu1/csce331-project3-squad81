@@ -12,7 +12,7 @@ function formatElapsed(totalSeconds) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-export default function OrderTicket({ order, busy, onUpdateStatus }) {
+export default function OrderTicket({ order, busy, onUpdateStatus, onMarkPaid }) {
   // age_seconds comes from the server clock; tick forward locally between polls.
   const [receivedAt] = useState(() => Date.now());
   const [now, setNow] = useState(() => Date.now());
@@ -35,7 +35,19 @@ export default function OrderTicket({ order, busy, onUpdateStatus }) {
             Waiting {formatElapsed(elapsedSeconds)}
           </p>
         </div>
+        <span className={`payment-badge ${order.is_paid ? 'is-paid' : 'is-unpaid'}`}>
+          {order.is_paid ? 'Paid' : 'Unpaid'}
+        </span>
       </div>
+
+      {!order.is_paid && (
+        <div className="payment-due">
+          <span>Collect payment at the counter</span>
+          <button type="button" disabled={busy} onClick={() => onMarkPaid(order.order_id)}>
+            Mark as paid
+          </button>
+        </div>
+      )}
 
       {order.items.map((item, index) => (
         <dl className="cart-item-details" key={index}>
@@ -55,7 +67,8 @@ export default function OrderTicket({ order, busy, onUpdateStatus }) {
         <button
           className="submit-order-button"
           type="button"
-          disabled={busy}
+          disabled={busy || (action.status === 'completed' && !order.is_paid)}
+          title={action.status === 'completed' && !order.is_paid ? 'Collect payment first' : undefined}
           onClick={() => onUpdateStatus(order.order_id, action.status)}
         >
           {busy ? 'Updating…' : action.label}

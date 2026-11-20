@@ -43,7 +43,7 @@ app.get('/api/auth/me', ...requireRoles('manager', 'cashier', 'kitchen'), (req, 
 app.get('/api/reports', ...requireRoles('manager'), async (req, res) => {
     try {
         const { rows } = await pool.query(
-        "SELECT m.name, SUM(oi.quantity) AS sold FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id"
+        "SELECT m.name, SUM(oi.quantity) AS sold FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id "
         + "JOIN orders o ON o.order_id = oi.order_id GROUP BY m.name ORDER BY sold DESC LIMIT 10;"
         );
         res.json({ reports: rows });
@@ -112,6 +112,19 @@ app.get('/api/menu', async (req, res) => {
     } catch (error) {
         console.error('Unable to load menu items:', error);
         res.status(500).json({ error: 'Unable to load menu items.' });
+    }
+});
+
+app.get('/api/menu/popular', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT m.menu_item_id FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id '
+            + 'GROUP BY m.menu_item_id ORDER BY SUM(oi.quantity) DESC, m.menu_item_id LIMIT 5;'
+        );
+        res.json({ popularIds: rows.map((row) => row.menu_item_id) });
+    } catch (error) {
+        console.error('Unable to load popular menu items:', error);
+        res.status(500).json({ error: 'Unable to load popular menu items.' });
     }
 });
 

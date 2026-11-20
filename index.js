@@ -43,7 +43,7 @@ app.get('/api/auth/me', ...requireRoles('manager', 'cashier', 'kitchen'), (req, 
 app.get('/api/reports', ...requireRoles('manager'), async (req, res) => {
     try {
         const { rows } = await pool.query(
-        "SELECT m.name, SUM(oi.quantity) AS sold FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id"
+        "SELECT m.name, SUM(oi.quantity) AS sold FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id "
         + "JOIN orders o ON o.order_id = oi.order_id GROUP BY m.name ORDER BY sold DESC LIMIT 10;"
         );
         res.json({ reports: rows });
@@ -112,6 +112,19 @@ app.get('/api/menu', async (req, res) => {
     } catch (error) {
         console.error('Unable to load menu items:', error);
         res.status(500).json({ error: 'Unable to load menu items.' });
+    }
+});
+
+app.get('/api/menu/popular', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT m.menu_item_id FROM order_items oi JOIN menu_items m ON m.menu_item_id = oi.menu_item_id '
+            + 'GROUP BY m.menu_item_id ORDER BY SUM(oi.quantity) DESC, m.menu_item_id LIMIT 5;'
+        );
+        res.json({ popularIds: rows.map((row) => row.menu_item_id) });
+    } catch (error) {
+        console.error('Unable to load popular menu items:', error);
+        res.status(500).json({ error: 'Unable to load popular menu items.' });
     }
 });
 
@@ -201,7 +214,9 @@ async function handleOrder(req, res) {
     try {
         // Rewards are only accepted from the public kiosk route, not the staff routes.
         const rewards = req.staff ? null : { phone: req.body?.rewards_phone, redeem: req.body?.redeem_reward === true };
-        const order = await submitOrder(pool, req.body?.items, req.staff?.employee_id ?? null, rewards);
+        // Kiosk orders must say how the customer is paying; staff orders keep the register defaults.
+        const payment = req.staff ? null : { method: req.body?.payment_method };
+        const order = await submitOrder(pool, req.body?.items, req.staff?.employee_id ?? null, rewards, payment);
         return res.status(201).json({ order });
     } catch (error) {
         if (error instanceof OrderRequestError) {
@@ -231,6 +246,7 @@ app.get('/api/kitchen/orders', ...requireRoles('manager', 'kitchen'), async (req
         const { rows } = await pool.query(
             `SELECT o.order_id, o.kitchen_status AS status,
                     GREATEST(0, FLOOR(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - o.order_time))))::int AS age_seconds,
+                    o.is_paid, o.payment_type,
                     oi.quantity, m.name, oi.sugar_level, oi.ice_level, oi.toppings, oi.notes
              FROM orders o
              JOIN order_items oi ON oi.order_id = o.order_id
@@ -244,6 +260,8 @@ app.get('/api/kitchen/orders', ...requireRoles('manager', 'kitchen'), async (req
                 ordersById.set(row.order_id, {
                     order_id: row.order_id,
                     status: row.status,
+                    is_paid: row.is_paid !== false,
+                    payment_type: row.payment_type,
                     age_seconds: row.age_seconds,
                     items: []
                 });
@@ -271,15 +289,36 @@ app.patch('/api/kitchen/orders/:id/status', ...requireRoles('manager', 'kitchen'
         return res.status(400).json({ error: 'Provide a valid order ID and status.' });
     }
     try {
+        // An order can't be handed over until its payment has been collected.
         const { rowCount } = await pool.query(
-            'UPDATE orders SET kitchen_status = $1 WHERE order_id = $2;',
+            "UPDATE orders SET kitchen_status = $1 WHERE order_id = $2 AND ($1 <> 'completed' OR is_paid IS NOT FALSE);",
             [status, id]
         );
-        if (!rowCount) return res.status(404).json({ error: 'Order not found.' });
+        if (!rowCount) {
+            const { rows } = await pool.query('SELECT is_paid FROM orders WHERE order_id = $1;', [id]);
+            if (rows.length === 0) return res.status(404).json({ error: 'Order not found.' });
+            return res.status(409).json({ error: 'Collect payment before handing over this order.' });
+        }
         res.json({ order_id: id, status });
     } catch (error) {
         console.error('Unable to update kitchen order:', error);
         res.status(500).json({ error: 'Unable to update the order.' });
+    }
+});
+
+// Cashiers and kitchen staff mark a pay-at-counter order as paid once the money is collected.
+app.patch('/api/orders/:id/paid', ...requireRoles('manager', 'cashier', 'kitchen'), async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({ error: 'Provide a valid order ID.' });
+    }
+    try {
+        const { rowCount } = await pool.query('UPDATE orders SET is_paid = TRUE WHERE order_id = $1;', [id]);
+        if (!rowCount) return res.status(404).json({ error: 'Order not found.' });
+        res.json({ order_id: id, is_paid: true });
+    } catch (error) {
+        console.error('Unable to mark order as paid:', error);
+        res.status(500).json({ error: 'Unable to mark the order as paid.' });
     }
 });
 

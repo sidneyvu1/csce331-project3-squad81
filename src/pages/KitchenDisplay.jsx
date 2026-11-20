@@ -71,6 +71,29 @@ export default function KitchenDisplay() {
     }
   }
 
+  async function markPaid(orderId) {
+    setActionError('');
+    setBusyIds((current) => new Set(current).add(orderId));
+    try {
+      const response = await staffFetch(`/api/orders/${orderId}/paid`, { method: 'PATCH' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Unable to mark the order as paid.');
+      }
+      setOrders((current) => current.map((order) => (
+        order.order_id === orderId ? { ...order, is_paid: true } : order
+      )));
+    } catch (payError) {
+      setActionError(payError.message || 'Unable to mark the order as paid.');
+    } finally {
+      setBusyIds((current) => {
+        const next = new Set(current);
+        next.delete(orderId);
+        return next;
+      });
+    }
+  }
+
   const activeCount = orders.filter((order) => order.status !== 'ready').length;
   const errorMessage = error ? `${error} Retrying…` : actionError;
 
@@ -108,6 +131,7 @@ export default function KitchenDisplay() {
                           order={order}
                           busy={busyIds.has(order.order_id)}
                           onUpdateStatus={updateStatus}
+                          onMarkPaid={markPaid}
                         />
                       ))}
                     </ul>

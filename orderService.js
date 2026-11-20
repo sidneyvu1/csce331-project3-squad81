@@ -34,6 +34,30 @@ function validateRewardsRequest(rewards) {
     return { phone: normalizePhone(rewards.phone), redeem: rewards.redeem === true };
 }
 
+const PAYMENT_METHODS = ['card', 'counter', 'rewards'];
+
+// The kiosk reports how the customer chose to pay. Card details never reach the server
+// (payment is a clearly labelled demo), so the server only records the method and decides
+// the paid status itself instead of trusting the browser.
+function validatePaymentRequest(payment) {
+    if (!payment) return null;
+    if (!PAYMENT_METHODS.includes(payment.method)) {
+        throw new OrderRequestError('Choose a valid payment method.');
+    }
+    return { method: payment.method };
+}
+
+function resolvePayment(payment, totalCents) {
+    if (!payment) return null;
+    if (totalCents === 0) return { paymentType: 'Rewards', isPaid: true };
+    if (payment.method === 'rewards') {
+        throw new OrderRequestError('Rewards can only cover an order with nothing left to pay.');
+    }
+    return payment.method === 'card'
+        ? { paymentType: 'Card', isPaid: true }
+        : { paymentType: 'Counter', isPaid: false };
+}
+
 function validateOrderItems(items) {
     if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
         throw new OrderRequestError('An order must contain between 1 and 100 items.');
@@ -234,15 +258,18 @@ async function getRewardsBalance(pool, rawPhone) {
     return { points, redeem_points: REDEEM_POINTS, can_redeem: points >= REDEEM_POINTS };
 }
 
-async function insertOrder(client, totals, employeeId, customerId = null) {
+async function insertOrder(client, totals, employeeId, customerId = null, payment = null) {
+    // Without payment info (staff orders) the column defaults apply: Card, paid.
     const { rows } = await client.query(
-        "INSERT INTO orders (order_time, employee_id, total, number_of_drinks, tax, kitchen_status, customer_id) VALUES (CURRENT_TIMESTAMP, $4, $1, $2, $3, 'pending', $5) RETURNING order_id;",
+        "INSERT INTO orders (order_time, employee_id, total, number_of_drinks, tax, kitchen_status, customer_id, payment_type, is_paid) VALUES (CURRENT_TIMESTAMP, $4, $1, $2, $3, 'pending', $5, COALESCE($6, 'Card'), COALESCE($7, TRUE)) RETURNING order_id;",
         [
             (totals.totalCents / 100).toFixed(2),
             totals.numberOfDrinks,
             (totals.taxCents / 100).toFixed(2),
             employeeId,
-            customerId
+            customerId,
+            payment?.paymentType ?? null,
+            payment?.isPaid ?? null
         ]
     );
     return rows[0].order_id;
@@ -271,9 +298,10 @@ async function insertOrderItems(client, orderId, items, menuPrices, inventoryByI
     }
 }
 
-async function submitOrder(pool, rawItems, employeeId = null, rawRewards = null) {
+async function submitOrder(pool, rawItems, employeeId = null, rawRewards = null, rawPayment = null) {
     const items = validateOrderItems(rawItems);
     const rewards = validateRewardsRequest(rawRewards);
+    const paymentRequest = validatePaymentRequest(rawPayment);
     const client = await pool.connect();
 
     try {
@@ -285,7 +313,8 @@ async function submitOrder(pool, rawItems, employeeId = null, rawRewards = null)
             throw new OrderRequestError(`You need ${REDEEM_POINTS} points to redeem a free drink.`, 409);
         }
         const totals = calculateOrderTotals(items, menuPrices, inventoryById, Boolean(rewards?.redeem));
-        const orderId = await insertOrder(client, totals, employeeId, customer?.customer_id ?? null);
+        const payment = resolvePayment(paymentRequest, totals.totalCents);
+        const orderId = await insertOrder(client, totals, employeeId, customer?.customer_id ?? null, payment);
         await insertOrderItems(client, orderId, items, menuPrices, inventoryById);
         await deductInventory(client, inventoryRequirements);
         const rewardResult = customer ? await applyRewards(client, customer, orderId, totals, rewards.redeem) : null;
@@ -298,6 +327,7 @@ async function submitOrder(pool, rawItems, employeeId = null, rawRewards = null)
             tax: (totals.taxCents / 100).toFixed(2),
             total: (totals.totalCents / 100).toFixed(2),
             number_of_drinks: totals.numberOfDrinks,
+            ...(payment && { payment_type: payment.paymentType, is_paid: payment.isPaid }),
             ...(rewardResult && {
                 points_earned: totals.pointsEarned,
                 points_redeemed: rewardResult.redeemed,

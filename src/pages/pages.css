@@ -264,35 +264,63 @@
   
   /* Kiosk Weather */
   .kiosk-weather {
+    display: flex;
+    align-items: center;
+    gap: 18px;
     box-sizing: border-box;
     width: 100%;
     margin-top: 20px;
-    padding: 16px 18px;
-    border: 1px solid #89CFF0;
-    border-radius: 10px;
-    background: #89CFF0;
-    color: #ffe39c;
+    padding: 16px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-surface-soft), var(--color-surface-hover));
+    color: var(--color-ink);
   }
-  
+
+  .kiosk-weather-icon {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .kiosk-weather-icon .wx-sun circle { fill: #f6bd4f; }
+  .kiosk-weather-icon .wx-sun line { stroke: #f6bd4f; stroke-width: 3.5; }
+  .kiosk-weather-icon .wx-moon { fill: #f3d98b; }
+  .kiosk-weather-icon .wx-cloud { fill: #ffe9e6; stroke: var(--color-accent); stroke-width: 2.5; }
+  .kiosk-weather-icon .wx-rain line { stroke: #7d9fd1; stroke-width: 3; }
+  .kiosk-weather-icon .wx-bolt { fill: #f6bd4f; stroke: #c98a1b; stroke-width: 1.5; }
+  .kiosk-weather-icon .wx-snow circle { fill: #9fc4e8; }
+  .kiosk-weather-icon .wx-mist line { stroke: var(--color-accent); stroke-width: 3; opacity: .55; }
+
+  .kiosk-weather-body { min-width: 0; }
   .kiosk-weather h2 {
-    color: #402727;
+    margin: 0;
+    color: var(--color-ink);
     font: inherit;
-    font-size: clamp(16px, 1.5vw, 16px);
-    font-weight: 650; }
-  .kiosk-weather p {margin: 10px 0;}
-  .kiosk-weather-temperature {font: inherit; font-weight: 600; font-size: 16px; text-transform: capitalize; }
-  .kiosk-weather-temperature strong {font-size: 24px;}
+    font-size: 16px;
+    font-weight: 650;
+  }
+  .kiosk-weather p { margin: 8px 0; }
+  .kiosk-weather-temperature {
+    color: var(--color-accent);
+    font: inherit;
+    font-weight: 600;
+    font-size: 16px;
+    text-transform: capitalize;
+  }
+  .kiosk-weather-temperature strong { color: var(--color-ink); font-size: 28px; }
   .kiosk-weather-details {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 18px; 
-    margin-top: 8px; 
-    color: #333;
+    gap: 8px 18px;
+    margin-top: 4px;
+    color: var(--color-muted);
     font: inherit;
     font-size: 14px;
-    font-weight: 475;
+    font-weight: 500;
   }
-  
+
   /* Hub Page */
   .hub-container {
     display: flex;
@@ -1342,3 +1370,373 @@
   .kiosk-redeem-actions { margin-top: 28px; }
   .kiosk-checkout .kiosk-rewards-note { margin: 12px 0 0; }
   
+
+  /* Cashier order board (types and add-ons | popular, adjustments, drinks | search, preview, cart) */
+  .pos-board {
+    display: grid;
+    flex: 1;
+    grid-template-columns: 220px minmax(0, 1fr) minmax(300px, 380px);
+    gap: 20px;
+    width: 100%;
+    max-width: 1700px;
+    min-height: 0;
+    margin: 0 auto;
+  }
+
+  .pos-sidebar,
+  .pos-center,
+  .pos-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .pos-sidebar,
+  .pos-center {
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .pos-sidebar { overflow-y: auto; }
+
+  .pos-section h2 {
+    margin: 0 0 10px;
+    color: var(--color-ink);
+    font-size: 18px;
+  }
+
+  .pos-types,
+  .pos-addon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pos-type,
+  .pos-addon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface-soft);
+    color: var(--color-ink);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+
+  .pos-type:hover:not(:disabled),
+  .pos-addon:hover:not(:disabled),
+  .pos-type.is-selected,
+  .pos-addon.is-selected {
+    border-color: var(--color-primary);
+    background: var(--color-surface-hover);
+  }
+
+  .pos-type.is-selected { font-weight: 700; }
+
+  .pos-addon:disabled {
+    color: var(--color-disabled);
+    cursor: not-allowed;
+  }
+
+  .pos-addon-toggle {
+    display: grid;
+    flex: 0 0 22px;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .pos-addon-name { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; }
+  .pos-addon-meta { color: var(--color-muted); font-size: 12px; }
+
+  .pos-popular-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .pos-popular-item,
+  .pos-drink-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    cursor: pointer;
+    font: inherit;
+    text-align: center;
+  }
+
+  .pos-popular-item { padding: 10px 8px; font-size: 13px; }
+  .pos-popular-item span {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .pos-popular-icon { width: 34px; height: 38px; }
+
+  .pos-popular-item:hover:not(:disabled),
+  .pos-drink-card:hover:not(:disabled) {
+    border-color: var(--color-border-strong);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .pos-popular-item.is-selected,
+  .pos-drink-card.is-selected {
+    border-color: var(--color-primary);
+    background: var(--color-surface-hover);
+  }
+
+  .pos-adjustments { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+
+  .pos-adjustment-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .pos-adjustment-group legend {
+    float: left;
+    margin-right: 8px;
+    padding: 0;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .pos-chip {
+    position: relative;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface-soft);
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .pos-chip input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .pos-chip:hover,
+  .pos-chip.is-selected {
+    border-color: var(--color-primary);
+    background: var(--color-surface-hover);
+  }
+
+  .pos-chip.is-selected { font-weight: 700; }
+  .pos-chip:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+  .pos-center { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+  .pos-center > .pos-section { flex-shrink: 0; }
+  .pos-drinks { display: flex; flex: 1 1 0; min-height: 240px; }
+
+  .pos-drinks-grid {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 12px;
+    min-height: 0;
+    padding-right: 8px;
+    overflow-y: auto;
+  }
+
+  .pos-drink-card { padding: 14px 10px; }
+  .pos-drink-icon { width: 40px; height: 46px; }
+  .pos-drink-name { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .pos-drink-price { color: var(--color-muted); font-size: 13px; }
+
+  .pos-search,
+  .pos-notes {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font: inherit;
+  }
+
+  .pos-search:focus,
+  .pos-notes:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  .pos-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 168px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .pos-preview-cup { flex: 0 0 90px; width: 90px; height: 100px; }
+  .pos-preview-details { display: flex; flex: 1; flex-direction: column; gap: 6px; min-width: 0; }
+  .pos-preview-details h3 { margin: 0; color: var(--color-ink); font-size: 17px; }
+  .pos-preview-details p { margin: 0; color: var(--color-muted); font-size: 13px; overflow-wrap: anywhere; }
+  .pos-preview-empty { width: 100%; margin: 0; color: var(--color-muted); line-height: 1.5; text-align: center; }
+
+  .pos-add-button {
+    min-height: 40px;
+    margin-top: 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+  }
+
+  .pos-add-button:hover:not(:disabled) { background: var(--color-primary-hover); }
+  .pos-add-button:disabled { background: var(--color-disabled); border-color: var(--color-disabled); cursor: not-allowed; }
+
+  .pos-right { overflow-y: auto; padding-right: 2px; scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+  .pos-right > * { flex-shrink: 0; }
+  /* Shrinks with the screen but never below a size where totals, messages and Done stay reachable. */
+  .pos-right .cashier-cart { flex: 1 1 auto; flex-shrink: 1; min-height: 400px; }
+  .pos-right .cart-items { min-height: 90px; }
+  .pos-right .order-submit-message { overflow-wrap: anywhere; }
+
+  @media (max-width: 1250px) {
+    .pos-board { grid-template-columns: 190px minmax(0, 1fr) minmax(280px, 340px); gap: 14px; }
+  }
+
+  @media (max-width: 1000px) {
+    .pos-board { grid-template-columns: 1fr; }
+    .pos-sidebar, .pos-center { min-height: 0; }
+    .pos-drinks-grid { max-height: 60vh; }
+    .pos-types { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+    .pos-type { flex: 0 0 auto; width: auto; }
+    .pos-right .cashier-cart { min-height: 280px; }
+  }
+
+  /* Customer menu: keep the panel inside the viewport; categories and drinks scroll on their own. */
+  .cashier-menu { min-width: 0; overflow: hidden; box-sizing: border-box; }
+  .cashier-menu-layout { grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); overflow: hidden; }
+  .cashier-menu-layout > * { min-width: 0; min-height: 0; }
+  .menu-categories {
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+  .menu-categories .menu-category { flex: 0 0 auto; }
+  .menu-item-grid { grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+  .menu-item-card h4 { overflow-wrap: anywhere; }
+
+  @media (max-width: 1000px) {
+    .cashier-menu { overflow: visible; }
+    .cashier-menu-layout { overflow: visible; }
+    .menu-item-grid { overflow: visible; }
+  }
+
+  @media (max-width: 700px) {
+    .cashier-menu-layout { grid-template-columns: minmax(0, 1fr); }
+    .menu-categories { overflow-y: visible; overflow-x: auto; }
+  }
+
+  .kiosk-demo-notice {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px dashed var(--color-accent);
+    border-radius: 8px;
+    background: var(--color-surface-soft);
+    color: var(--color-accent);
+  }
+  .kiosk-demo-notice p { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .kiosk-demo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .kiosk-demo-actions button {
+    padding: 7px 14px;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .kiosk-demo-actions button:hover:not(:disabled) { background: var(--color-surface-hover); }
+  .kiosk-demo-actions button:disabled { border-color: var(--color-disabled); color: var(--color-disabled); cursor: not-allowed; }
+  .kiosk-checkout .menu-error { margin: 12px 0; line-height: 1.4; }
+  .kiosk-checkout input[type="radio"] { accent-color: var(--color-accent); }
+
+  /* Kitchen ticket payment status */
+  .payment-badge {
+    flex: 0 0 auto;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .payment-badge.is-paid { background: #e3f1e6; color: #246b36; }
+  .payment-badge.is-unpaid { background: var(--color-surface-hover); color: var(--color-accent); border: 1px solid var(--color-accent); }
+  .payment-due {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 10px 0 0;
+    padding: 8px 12px;
+    border: 1px dashed var(--color-accent);
+    border-radius: 8px;
+    background: var(--color-surface-soft);
+    color: var(--color-accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .payment-due button {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    border: 1px solid var(--color-accent);
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .payment-due button:hover:not(:disabled) { background: var(--color-accent-hover); }
+  .payment-due button:disabled { background: var(--color-disabled); border-color: var(--color-disabled); cursor: not-allowed; }
+  .kitchen-page .submit-order-button:disabled { cursor: not-allowed; }

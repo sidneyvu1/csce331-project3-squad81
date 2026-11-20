@@ -12,6 +12,12 @@ import { useLanguage } from '../components/kiosk/LanguageContext';
 import KioskWeather from '../components/kiosk/KioskWeather';
 import './pages.css';
 
+// The browser reports an unreachable server as a bare "Failed to fetch".
+function describeFailure(failure, fallback) {
+  if (failure instanceof TypeError) return 'We could not reach the server. Please check the connection and try again.';
+  return failure.message || fallback;
+}
+
 async function fetchToppings() {
   const response = await fetch('/api/toppings');
   if (!response.ok) {
@@ -94,7 +100,7 @@ export default function CustomerKiosk() {
       setRewardsInfo(data);
       setCheckoutStep(data.can_redeem && cart.length > 0 ? 'redeem' : 'payment');
     } catch (lookupFailure) {
-      setSubmitError(`${lookupFailure.message || 'Unable to look up rewards.'} You can try again or skip rewards.`);
+      setSubmitError(`${describeFailure(lookupFailure, 'Unable to look up rewards.')} You can try again or skip rewards.`);
     } finally {
       setLookingUpRewards(false);
     }
@@ -150,6 +156,7 @@ export default function CustomerKiosk() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: orderItems,
+          payment_method: payment.method,
           ...(rewardsPhone && { rewards_phone: rewardsPhone, redeem_reward: redeemReward })
         })
       });
@@ -184,7 +191,7 @@ export default function CustomerKiosk() {
         );
       }
     } catch (submitFailure) {
-      setSubmitError(submitFailure.message || 'Unable to submit the order. Please try again.');
+      setSubmitError(describeFailure(submitFailure, 'Unable to submit the order. Please try again.'));
     } finally {
       setSubmittingOrder(false);
     }

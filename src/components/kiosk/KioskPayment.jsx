@@ -48,12 +48,26 @@ function validateCard({ name, number, expiry, cvc }, language) {
   return errors;
 }
 
+// Test card (passes the Luhn check). Expiry is always a few years out so it never goes stale.
+function demoCard() {
+  const year = String((new Date().getFullYear() + 3) % 100).padStart(2, '0');
+  return { name: 'Demo Customer', number: '4242 4242 4242 4242', expiry: `12/${year}`, cvc: '123' };
+}
+
+// Demo card that the simulated gateway always declines, for showing the failure and retry flow.
+const DECLINED_CARD = { name: 'Demo Customer', number: '4000 0000 0000 0002', expiry: '', cvc: '123' };
+
+function declinedCard() {
+  return { ...DECLINED_CARD, expiry: demoCard().expiry };
+}
+
 export default function KioskPayment({ totalCents, submitting, error, onPay, onBack, language = 'en' }) {
   const heading = useRef(null);
   const [method, setMethod] = useState('card');
   const [card, setCard] = useState({ name: '', number: '', expiry: '', cvc: '' });
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
+  const [declined, setDeclined] = useState(false);
   const busy = processing || submitting;
   const free = totalCents === 0;
 
@@ -61,6 +75,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
 
   function updateCard(field, value) {
     setCard((current) => ({ ...current, [field]: value }));
+    setDeclined(false);
     setErrors((current) => ({ ...current, [field]: '' }));
   }
 
@@ -78,11 +93,16 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
       payment = { method: 'card', last4: card.number.replace(/\D/g, '').slice(-4) };
     }
 
-    // Payment is simulated for this project: card details stay in this component
-    // and are never sent to the server or stored.
+    // Payment is a labelled demo: card details stay in this component and are never
+    // sent to the server or stored. The simulated gateway declines one known test card.
+    setDeclined(false);
     setProcessing(true);
     if (!free && method === 'card') await new Promise((resolve) => setTimeout(resolve, 1200));
     setProcessing(false);
+    if (payment.method === 'card' && card.number.replace(/\D/g, '') === DECLINED_CARD.number.replace(/\D/g, '')) {
+      setDeclined(true);
+      return;
+    }
     onPay(payment);
   }
 
@@ -100,6 +120,21 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
       <h2 id="checkout-heading" ref={heading} tabIndex={-1}>{t(language, 'pay')}</h2>
 
       <form onSubmit={pay} noValidate>
+        {!free && (
+          <div className="kiosk-demo-notice" role="note">
+            <p>{t(language, 'demoNotice')}</p>
+            {method === 'card' && (
+              <div className="kiosk-demo-actions">
+                <button type="button" disabled={busy} onClick={() => { setCard(demoCard()); setErrors({}); setDeclined(false); }}>
+                  {t(language, 'useDemoCard')}
+                </button>
+                <button type="button" disabled={busy} onClick={() => { setCard(declinedCard()); setErrors({}); setDeclined(false); }}>
+                  {t(language, 'useDeclinedCard')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {free ? (
           <p>{t(language, 'rewardsCover')}</p>
         ) : (<>
@@ -151,6 +186,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
         </>)}
 
         <div className="kiosk-checkout-total"><span>{t(language, 'orderTotal')}</span><strong>{money(totalCents / 100)}</strong></div>
+        {declined && <p className="menu-error" role="alert">{t(language, 'cardDeclined')}</p>}
         {error && <p className="menu-error" role="alert">{error}</p>}
         <div className="kiosk-checkout-actions">
           <button type="submit" className="submit-order-button" disabled={busy}>

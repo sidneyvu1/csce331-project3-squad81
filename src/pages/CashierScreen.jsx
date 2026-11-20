@@ -1,9 +1,7 @@
 import { useStaff, StaffControls } from '../auth/StaffAuth';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import CartPanel from '../components/cashier/CartPanel';
-import DrinkCustomizationModal from '../components/cashier/DrinkCustomizationModal';
-import MenuBrowser from '../components/cashier/MenuBrowser';
+import CashierOrderBoard from '../components/cashier/CashierOrderBoard';
 import './pages.css';
 
 async function fetchToppings() {
@@ -30,7 +28,7 @@ export default function CashierScreen() {
   const [toppingsLoading, setToppingsLoading] = useState(true);
   const [error, setError] = useState('');
   const [toppingsError, setToppingsError] = useState('');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [popularIds, setPopularIds] = useState([]);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [completedOrder, setCompletedOrder] = useState(null);
@@ -47,7 +45,6 @@ export default function CashierScreen() {
     setCompletedOrder(null);
     setSubmitError('');
     setCart((current) => [...current, { ...item, id: nextCartItemId.current++ }]);
-    setSelectedItem(null);
   }
 
   function updateCartQuantity(itemId, change) {
@@ -159,6 +156,26 @@ export default function CashierScreen() {
   useEffect(() => {
     let active = true;
 
+    async function loadPopular() {
+      try {
+        const response = await fetch('/api/menu/popular');
+        if (!response.ok) return;
+        const data = await response.json();
+        if (active && Array.isArray(data.popularIds)) setPopularIds(data.popularIds);
+      } catch {
+        // Popular drinks are a convenience; the board falls back to the menu order.
+      }
+    }
+
+    loadPopular();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
     async function loadToppings() {
       try {
         if (active) {
@@ -191,43 +208,31 @@ export default function CashierScreen() {
       </header>
 
       <main className="page-content cashier-page-content">
-        <div className="cashier-workspace">
-          <MenuBrowser
-            menuItems={menuItems}
-            loading={loading}
-            error={error}
-            disabled={submittingOrder}
-            onSelectItem={(item) => {
-              setCompletedOrder(null);
-              setSelectedItem(item);
-            }}
-          />
-          <CartPanel
-            cart={cart}
-            drinkCount={cartDrinkCount}
-            subtotalCents={subtotalCents}
-            taxCents={taxCents}
-            totalCents={totalCents}
-            onUpdateQuantity={updateCartQuantity}
-            onRemoveItem={removeCartItem}
-            submitting={submittingOrder}
-            submitError={submitError}
-            completedOrder={completedOrder}
-            onSubmitOrder={submitOrder}
-          />
-        </div>
-      </main>
-
-      {selectedItem && (
-        <DrinkCustomizationModal
-          item={selectedItem}
+        <CashierOrderBoard
+          menuItems={menuItems}
+          popularIds={popularIds}
+          loading={loading}
+          error={error}
           toppings={toppings}
           toppingsLoading={toppingsLoading}
           toppingsError={toppingsError}
-          onClose={() => setSelectedItem(null)}
+          disabled={submittingOrder}
           onAddToCart={addToCart}
+          cartProps={{
+            cart,
+            drinkCount: cartDrinkCount,
+            subtotalCents,
+            taxCents,
+            totalCents,
+            onUpdateQuantity: updateCartQuantity,
+            onRemoveItem: removeCartItem,
+            submitting: submittingOrder,
+            submitError,
+            completedOrder,
+            onSubmitOrder: submitOrder
+          }}
         />
-      )}
+      </main>
     </div>
   );
 }

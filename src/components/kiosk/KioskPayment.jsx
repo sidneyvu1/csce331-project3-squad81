@@ -88,6 +88,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
       const found = validateCard(card, language);
       if (Object.keys(found).length > 0) {
         setErrors(found);
+        requestAnimationFrame(() => document.getElementById(`card-${Object.keys(found)[0] === 'number' ? 'number' : Object.keys(found)[0]}`)?.focus());
         return;
       }
       payment = { method: 'card', last4: card.number.replace(/\D/g, '').slice(-4) };
@@ -119,6 +120,7 @@ export default function KioskPayment({ totalCents, submitting, error, onPay, onB
     <section className="kiosk-checkout" aria-labelledby="checkout-heading" aria-busy={busy}>
       <h2 id="checkout-heading" ref={heading} tabIndex={-1}>{t(language, 'pay')}</h2>
 
+      <p className="sr-only" role="status" aria-atomic="true">{processing ? t(language, 'processingPayment') : ''}</p>
       <form onSubmit={pay} noValidate>
         {!free && (
           <div className="kiosk-demo-notice" role="note">

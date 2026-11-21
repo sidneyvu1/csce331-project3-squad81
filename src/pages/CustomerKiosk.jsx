@@ -39,6 +39,7 @@ export default function CustomerKiosk() {
     setKioskWelcomeVisible
   } = useLanguage();
   const [hasStarted, setHasStarted] = useState(false);
+  const pageHeading = useRef(null);
   const nextCartItemId = useRef(1);
   const [cart, setCart] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -52,6 +53,7 @@ export default function CustomerKiosk() {
   const [submitError, setSubmitError] = useState('');
   const [completedOrder, setCompletedOrder] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState('menu');
+  useEffect(() => { if (hasStarted && checkoutStep === 'menu') pageHeading.current?.focus(); }, [hasStarted, checkoutStep]);
   const [rewardsPhone, setRewardsPhone] = useState('');
   const [rewardsInfo, setRewardsInfo] = useState(null);
   const [redeemReward, setRedeemReward] = useState(false);
@@ -310,13 +312,16 @@ export default function CustomerKiosk() {
   return (
     <div className="page-container customer-page" lang={selectedLanguage === 'zh' ? 'zh-CN' : selectedLanguage}>
       <header className="page-header">
-        <h1>{t(selectedLanguage, 'customerScreen')}</h1>
+        <h1 ref={pageHeading} tabIndex={-1}>{t(selectedLanguage, 'customerScreen')}</h1>
         <div className="customer-header-actions">
-          <span className="cart-count" aria-live="polite">{t(selectedLanguage, 'cartCount', { count: cartDrinkCount })}</span>
+          <span className="cart-count">{t(selectedLanguage, 'cartCount', { count: cartDrinkCount })}</span>
           <Link to="/" className="home-button">{t(selectedLanguage, 'home')}</Link>
         </div>
       </header>
 
+      <p className="sr-only" role="status" aria-atomic="true">
+        {submittingOrder ? t(selectedLanguage, 'placingOrder') : lookingUpRewards ? t(selectedLanguage, 'checkingRewards') : completedOrder ? t(selectedLanguage, 'submittedSuccess', { order: completedOrder.order_id, total: completedOrder.total }) : ''}
+      </p>
       <main className={`page-content customer-page-content${checkoutStep !== 'menu' ? ' is-checkout-step' : ''}`}>
         {checkoutStep === 'payment' ? (
           <KioskPayment

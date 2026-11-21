@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { cartAnnouncement } from '../accessibility/cartAnnouncement.mjs';
 import { translate as t } from '../kiosk/kioskText';
 
 function formatIceLevel(language, level) {
@@ -23,6 +24,15 @@ export default function CartPanel({
   submitLabel = 'Submit Order',
   language = 'en'
 }) {
+  const previousCart = useRef(cart);
+  const heading = useRef(null);
+  const [announcement, setAnnouncement] = useState('');
+  useEffect(() => {
+    const message = cartAnnouncement(previousCart.current, cart, totalCents);
+    previousCart.current = cart;
+    if (message) setAnnouncement(message);
+  }, [cart, totalCents]);
+
   function formatCurrency(cents) {
     return `$${(cents / 100).toFixed(2)}`;
   }
@@ -30,10 +40,11 @@ export default function CartPanel({
   return (
     <aside className="cashier-cart" aria-label={t(language, 'currentOrder')} aria-busy={submitting}>
       <header className="cashier-cart-header">
-        <h2>{t(language, 'currentOrder')}</h2>
+        <h2 ref={heading} tabIndex={-1}>{t(language, 'currentOrder')}</h2>
         <span>{drinkCount} {t(language, drinkCount === 1 ? 'drink' : 'drinks')}</span>
       </header>
 
+      <p className="sr-only" role="status" aria-atomic="true">{announcement}</p>
       {cart.length === 0 ? (
         <p className="cart-empty-message">{t(language, 'emptyOrder')}</p>
       ) : (
@@ -51,7 +62,7 @@ export default function CartPanel({
                     className="cart-item-remove"
                     type="button"
                     disabled={submitting}
-                    onClick={() => onRemoveItem(item.id)}
+                    onClick={() => { onRemoveItem(item.id); heading.current?.focus(); }}
                     aria-label={t(language, 'removeItem', { name: item.name })}
                     title={t(language, 'removeTitle')}
                   >

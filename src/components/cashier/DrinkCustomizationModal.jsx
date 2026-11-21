@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { translate as t } from '../kiosk/kioskText';
 import DrinkIllustration from '../kiosk/DrinkIllustration';
 
@@ -12,6 +12,9 @@ export default function DrinkCustomizationModal({
   customerFacing = false,
   language = 'en'
 }) {
+  const dialogRef = useRef(null);
+  const closeCallback = useRef(onClose);
+  closeCallback.current = onClose;
   const [sugarLevel, setSugarLevel] = useState('100%');
   const [iceLevel, setIceLevel] = useState('Regular');
   const [selectedToppings, setSelectedToppings] = useState([]);
@@ -25,13 +28,14 @@ export default function DrinkCustomizationModal({
     .filter(Boolean);
 
   useEffect(() => {
-    function closeOnEscape(event) {
-      if (event.key === 'Escape') onClose();
-    }
-
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [onClose]);
+    const dialog = dialogRef.current;
+    const trigger = document.activeElement;
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, []);
 
   function toggleTopping(toppingId) {
     setSelectedToppings((current) => (
@@ -62,8 +66,9 @@ export default function DrinkCustomizationModal({
   }
 
   return (
-    <div className="menu-item-modal-backdrop">
-      <section
+    <dialog
+        ref={dialogRef}
+        onCancel={(event) => { event.preventDefault(); closeCallback.current(); }}
         className="menu-item-modal"
         role="dialog"
         aria-modal="true"
@@ -206,7 +211,6 @@ export default function DrinkCustomizationModal({
             {quantity} {t(language, quantity === 1 ? 'drink' : 'drinks')} · ${(unitPriceCents * quantity / 100).toFixed(2)} {t(language, 'beforeTax')}. {t(language, 'selectedToppings')}: +${(toppingTotalCents / 100).toFixed(2)} {t(language, 'perDrink')}.
           </p>
         </div>
-      </section>
-    </div>
+    </dialog>
   );
 }

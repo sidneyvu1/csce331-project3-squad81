@@ -9,9 +9,14 @@ export default function AssistantChat({ disabled, onAddItems, language = 'en' })
   const [error, setError] = useState('');
   const endRef = useRef(null);
   const inputRef = useRef(null);
+  const launcherRef = useRef(null);
+  const wasOpened = useRef(false);
 
   useEffect(() => { endRef.current?.scrollIntoView?.({ block: 'end' }); }, [messages, sending, open]);
-  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+  useEffect(() => {
+    if (open) { wasOpened.current = true; inputRef.current?.focus(); }
+    else if (wasOpened.current) launcherRef.current?.focus();
+  }, [open]);
   useEffect(() => {
     if (!open) return undefined;
     const close = (event) => { if (event.key === 'Escape') setOpen(false); };
@@ -45,7 +50,7 @@ export default function AssistantChat({ disabled, onAddItems, language = 'en' })
   }
 
   if (!open) {
-    return <button type="button" className="assistant-launcher" onClick={() => setOpen(true)} aria-label={t(language, 'openAssistant')}>
+    return <button ref={launcherRef} type="button" className="assistant-launcher" onClick={() => setOpen(true)} aria-label={t(language, 'openAssistant')}>
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
       {t(language, 'assistantLauncher')}
     </button>;
@@ -53,7 +58,7 @@ export default function AssistantChat({ disabled, onAddItems, language = 'en' })
 
   return <section className="assistant-panel" role="dialog" aria-label={t(language, 'assistant')}>
     <header className="assistant-header">
-      <strong>{t(language, 'assistant')}</strong>
+      <h2>{t(language, 'assistant')}</h2>
       <button type="button" className="assistant-close" onClick={() => setOpen(false)} aria-label={t(language, 'closeAssistant')}>×</button>
     </header>
     <div className="assistant-messages" role="log" aria-live="polite">
@@ -71,7 +76,8 @@ export default function AssistantChat({ disabled, onAddItems, language = 'en' })
       <div ref={endRef} />
     </div>
     <form className="assistant-form" onSubmit={(event) => { event.preventDefault(); send(draft); }}>
-      <input ref={inputRef} value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={500} placeholder={t(language, 'askOrder')} aria-label={t(language, 'messageAssistant')} disabled={disabled} />
+      <label className="sr-only" htmlFor="assistant-message">{t(language, 'messageAssistant')}</label>
+      <input id="assistant-message" ref={inputRef} value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={500} placeholder={t(language, 'askOrder')} aria-label={t(language, 'messageAssistant')} disabled={disabled} />
       <button type="submit" className="submit-order-button" disabled={sending || disabled || !draft.trim()}>{t(language, 'send')}</button>
     </form>
   </section>;

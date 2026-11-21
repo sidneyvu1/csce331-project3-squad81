@@ -60,9 +60,9 @@ export default function MenuBrowser({ menuItems, loading, error, disabled, onSel
           ))}
         </nav>
 
-        <div className="menu-items" aria-live="polite">
-          <h3>{translateCategory(language, activeCategory)}</h3>
-          <div className="menu-item-grid">
+        <div className="menu-items">
+          <h3 id="active-menu-category">{translateCategory(language, activeCategory)}</h3>
+          <div className="menu-item-grid" role="group" aria-labelledby="active-menu-category">
             {visibleItems.map((item) => (
               <button
                 className="menu-item-card"

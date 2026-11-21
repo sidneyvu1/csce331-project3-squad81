@@ -71,7 +71,7 @@ export default function CartPanel({
                     <div><dt>{t(language, 'toppings')}</dt><dd>{item.toppings.map((topping) => `${topping.name}${Number.isInteger(topping.price_cents) ? ` (+$${(topping.price_cents / 100).toFixed(2)} ${t(language, 'each')})` : ''}`).join(', ')}</dd></div>
                   )}
                   {item.notes && (
-                    <div><dt>{t(language, 'notes')}</dt><dd>{item.notes}</dd></div>
+                    <div data-read-aloud-private><dt>{t(language, 'notes')}</dt><dd>{item.notes}</dd></div>
                   )}
                 </dl>
                 <div className="cart-item-footer">

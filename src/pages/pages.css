@@ -1740,3 +1740,11 @@
   .payment-due button:hover:not(:disabled) { background: var(--color-accent-hover); }
   .payment-due button:disabled { background: var(--color-disabled); border-color: var(--color-disabled); cursor: not-allowed; }
   .kitchen-page .submit-order-button:disabled { cursor: not-allowed; }
+
+/* Optional kiosk audio help; stays in normal flow on touch and small screens. */
+.read-aloud-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-bottom: 1px solid #ddd; background: #fff; color: #555; }
+.read-aloud-controls button { min-height: 44px; padding: 10px 14px; border: 1px solid #ccc; border-radius: 8px; background: #f8f7f8; color: #333; font: inherit; cursor: pointer; }
+.read-aloud-controls button[aria-pressed="true"] { background: #eee9ed; border-color: #686568; font-weight: 700; }
+.read-aloud-controls button:focus-visible { outline: 3px solid #686568; outline-offset: 2px; }
+.read-aloud-controls button:disabled { opacity: .5; cursor: not-allowed; }
+.read-aloud-controls span { font-size: 13px; }

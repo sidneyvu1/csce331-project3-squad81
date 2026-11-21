@@ -44,7 +44,7 @@ export default function KioskCheckout({
               </div>
               <p>{money(item.unit_price)} {t(language, 'each')} · {t(language, 'sugar')}: {item.sugar_level} · {t(language, 'ice')}: {iceLabel(language, item.ice_level)}</p>
               {item.toppings.length > 0 && <p>{t(language, 'toppings')}: {item.toppings.map((topping) => `${topping.name}${Number.isInteger(topping.price_cents) ? ` (+$${(topping.price_cents / 100).toFixed(2)} ${t(language, 'each')})` : ''}`).join(', ')}</p>}
-              {item.notes && <p>{t(language, 'notes')}: {item.notes}</p>}
+              {item.notes && <p data-read-aloud-private>{t(language, 'notes')}: {item.notes}</p>}
             </li>
           ))}
         </ul>
@@ -55,7 +55,7 @@ export default function KioskCheckout({
           <div className="cart-total"><dt>{t(language, 'orderTotal')}</dt><dd>{money(order.total)}</dd></div>
         </dl>
         {order.payment && (
-          <p className="kiosk-rewards-note">
+          <p className="kiosk-rewards-note" data-read-aloud-private>
             {order.payment.method === 'card'
               ? t(language, 'paidCard', { last4: order.payment.last4 })
               : order.payment.method === 'rewards'
@@ -64,7 +64,7 @@ export default function KioskCheckout({
           </p>
         )}
         {order.rewardsPhone && (
-          <p className="kiosk-rewards-note">
+          <p className="kiosk-rewards-note" data-read-aloud-private>
             {t(language, 'rewardsAccount', { last4: order.rewardsPhone.slice(-4) })}
             {order.points_redeemed > 0 && ` ${t(language, 'redeemedPoints', { points: order.points_redeemed })}`}
             {order.points_earned != null && ` ${t(language, 'earnedPoints', { points: order.points_earned, balance: order.points_balance })}`}

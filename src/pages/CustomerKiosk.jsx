@@ -390,7 +390,7 @@ export default function CustomerKiosk() {
         )}
       </main>
 
-      {checkoutStep === 'menu' && <AssistantChat language={selectedLanguage} disabled={submittingOrder} onAddItems={addAssistantItems} />}
+      {checkoutStep === 'menu' && <div data-read-aloud-private><AssistantChat language={selectedLanguage} disabled={submittingOrder} onAddItems={addAssistantItems} /></div>}
 
       {selectedItem && (
         <DrinkCustomizationModal

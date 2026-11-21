@@ -21,6 +21,7 @@ export default function KioskCheckout({
     const normalized = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
     if (normalized.length !== 10) {
       setPhoneError(t(language, 'invalidPhone'));
+      document.getElementById('rewards-phone')?.focus();
       return;
     }
     setPhoneError('');
